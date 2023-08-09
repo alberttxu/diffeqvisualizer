@@ -2,16 +2,20 @@
 
 CC=cc
 CFLAGS="-g3"
-WARNINGS="
--Wall
--Wextra
--Wstrict-prototypes
--Wdouble-promotion
--Wno-unused-parameter
--Wno-unused-function
--Wconversion
--Wno-sign-conversion
+WARNINGS="\
+-Wall \
+-Wextra \
+-Wstrict-prototypes \
+-Wdouble-promotion \
+-Wno-unused-parameter \
+-Wno-unused-function \
+-Wconversion \
+-Wno-sign-conversion \
 "
+INCLUDES="\
+-I/opt/local/include \
+"
+LIBS="/opt/local/lib/libraylib.dylib"
 
 if [ $1 = "debug" ]; then
    CFLAGS="$CFLAGS -O0"
@@ -27,4 +31,4 @@ fi
 
 set -xe
 
-$CC $CFLAGS $WARNINGS -o main source_code/main.c
+$CC $CFLAGS $WARNINGS $INCLUDES -o main source_code/main.c $LIBS

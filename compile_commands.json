@@ -1,0 +1,13 @@
+[
+   {
+      "directory": "/Users/albertxu/fun/diffeqvisualizer",
+      "arguments": [
+         "cc",
+         "-I/opt/local/include",
+         "-o",
+         "main",
+         "source_code/main.cpp"
+      ],
+      "file": "source_code/main.cpp"
+   }
+]
