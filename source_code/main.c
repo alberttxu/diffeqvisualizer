@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include <raylib.h>
+#include <julia.h>
 
 #include "useful_utils.c"
 
@@ -37,6 +38,10 @@ Vector2 coords2pixels(Vector2 graph_coords)
 
 int main(int argc, char **argv)
 {
+   jl_init();
+   jl_eval_string("println(sqrt(2.0))");
+   jl_atexit_hook(0);
+
    InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input");
    SetTargetFPS(60);
 

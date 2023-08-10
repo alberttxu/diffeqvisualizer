@@ -14,8 +14,14 @@ WARNINGS="\
 "
 INCLUDES="\
 -I/opt/local/include \
+-I/opt/local/include/julia \
 "
-LIBS="/opt/local/lib/libraylib.dylib"
+LIBS="\
+-L/opt/local/lib \
+-lraylib \
+-ljulia \
+-Wl,-rpath,/opt/local/lib
+"
 
 if [ $1 = "debug" ]; then
    CFLAGS="$CFLAGS -O0"
