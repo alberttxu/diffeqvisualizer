@@ -46,74 +46,105 @@ jl_value_t *eval(const char* code)
    return result;
 }
 
-int main(void)
-{
-
-   jl_init();
-
-   eval("include(\"source_code/compute.jl\")");
-
-   jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1);
-   jl_array_t *x = jl_alloc_array_1d(array_type, 2);
-   JL_GC_PUSH1(&x);
-   f64 *xData = (f64 *) jl_array_data(x);
-   xData[0] = 1.0;
-   xData[1] = 2.0;
-
-   jl_function_t *h = jl_get_function(jl_main_module, "h");
-   jl_value_t *boxedans = jl_call1(h, (jl_value_t *) x);
-   check_if_julia_exception_occurred();
-   assert(jl_typeis(boxedans, jl_float64_type));
-   f64 ans = jl_unbox_float64(boxedans);
-   showfloat(ans);
-
-   jl_atexit_hook(0);
-   return 0;
-}
-
 
 typedef f64 (*g_ptr)(f64 x);
 g_ptr g = NULL;
 
-int main3(void)
+int test_julia(void)
 {
    jl_init();
+   eval("include(\"source_code/compute.jl\")");
 
-   jl_value_t *ret;
-   ret = jl_eval_string("include(\"source_code/compute.jl\")");
-   AN(ret);
-
-   ret = jl_eval_string("f(3.0)");
-   AN(ret);
-   if (jl_typeis(ret, jl_float64_type))
    {
-      double ret_unboxed = jl_unbox_float64(ret);
-      printf("f(3.0) in C: %e \n", ret_unboxed);
-   }
-   else
-   {
-      printf("ERROR: unexpected return type\n");
+      puts("===========================");
+      jl_value_t *ret;
+      ret = jl_eval_string("f(3.0)");
+      AN(ret);
+      if (jl_typeis(ret, jl_float64_type))
+      {
+         double ret_unboxed = jl_unbox_float64(ret);
+         printf("f(3.0) in C: %e \n", ret_unboxed);
+      }
+      else
+      {
+         printf("ERROR: unexpected return type\n");
+      }
    }
 
-   ret = jl_eval_string("@cfunction(g, Float64, (Float64,))");
-   AN(ret);
-   g = (g_ptr) jl_unbox_voidpointer(ret);
-   showfloat(g(1.0));
-
-   jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_float64_type, 1);
-   jl_array_t* x          = jl_alloc_array_1d(array_type, 10);
-   double *xData = (double*)jl_array_data(x);
-   puts("before");
-   for(size_t i=0; i<jl_array_len(x); i++)
    {
-      xData[i] = i;
-      showfloat(xData[i]);
+      puts("===========================");
+      jl_value_t *ret;
+      ret = jl_eval_string("@cfunction(g, Float64, (Float64,))");
+      AN(ret);
+      g = (g_ptr) jl_unbox_voidpointer(ret);
+      showfloat(g(1.0));
    }
-   jl_function_t *func = jl_get_function(jl_base_module, "reverse!");
-   jl_call1(func, (jl_value_t*)x);
-   puts("after");
-   for(size_t i=0; i<jl_array_len(x); i++)
-      showfloat(xData[i]);
+
+   {
+      puts("===========================");
+      puts("reverse test");
+      jl_value_t* array_type = jl_apply_array_type((jl_value_t*)jl_float64_type, 1);
+      jl_array_t* x          = jl_alloc_array_1d(array_type, 10);
+      double *xData = (double*)jl_array_data(x);
+      puts("before");
+      for(size_t i=0; i<jl_array_len(x); i++)
+      {
+         xData[i] = i;
+         showfloat(xData[i]);
+      }
+      jl_function_t *func = jl_get_function(jl_base_module, "reverse!");
+      jl_call1(func, (jl_value_t*)x);
+      puts("after");
+      for(size_t i=0; i<jl_array_len(x); i++)
+         showfloat(xData[i]);
+   }
+
+   {
+      puts("===========================");
+      jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1);
+      jl_array_t *x = jl_alloc_array_1d(array_type, 2);
+      JL_GC_PUSH1(&x);
+      f64 *xData = (f64 *) jl_array_data(x);
+      xData[0] = 1.0;
+      xData[1] = 2.0;
+
+      jl_function_t *h = jl_get_function(jl_main_module, "h");
+      jl_value_t *boxedans = jl_call1(h, (jl_value_t *) x);
+      check_if_julia_exception_occurred();
+      assert(jl_typeis(boxedans, jl_float64_type));
+      f64 ans = jl_unbox_float64(boxedans);
+      printf("h([%f,%f]) = %f\n", xData[0], xData[1], ans);
+
+      JL_GC_POP();
+   }
+
+   /* { */
+   /*    jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1); */
+   /*    jl_array_t *x = jl_alloc_array_1d(array_type, 2); */
+   /*    JL_GC_PUSH1(&x); */
+   /*    f64 *xData = (f64 *) jl_array_data(x); */
+   /*    xData[0] = 1.0; */
+   /*    xData[1] = 0.0; */
+
+   /*    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2); */
+   /*    jl_array_t *A = jl_alloc_array_2d(matrix_type, 4); */
+   /*    JL_GC_PUSH1(&A); */
+   /*    f64 *AData = (f64 *) jl_array_data(A); */
+   /*    AData[0] = 0.0; */
+   /*    AData[1] = -1.0; */
+   /*    AData[2] = 1.0; */
+   /*    AData[3] = 0.0; */
+
+   /*    jl_value_t *t = jl_box_float64(1.0); */
+
+   /*    jl_function_t *solve_autonomous = jl_get_function(jl_main_module, "solve_autonomous"); */
+   /*    jl_value_t *boxedans = jl_call3(solve_autonomous, */
+   /*                                    (jl_value_t *)x, (jl_value_t *)A, (jl_value_t *)t); */
+   /*    check_if_julia_exception_occurred(); */
+   /*    jl_array_t *ret = (jl_array_t *)boxedans; */
+
+   /*    JL_GC_POP(); */
+   /* } */
 
    jl_atexit_hook(0);
    return 0;
@@ -137,7 +168,7 @@ Vector2 coords2pixels(Vector2 graph_coords)
    return pixel_coords;
 }
 
-int main2(int argc, char **argv)
+int appmain(void)
 {
    InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input");
    SetTargetFPS(60);
@@ -188,5 +219,12 @@ int main2(int argc, char **argv)
    }
 
    CloseWindow();
+   jl_atexit_hook(0);
+   return 0;
+}
+
+int main(void)
+{
+   test_julia();
    return 0;
 }

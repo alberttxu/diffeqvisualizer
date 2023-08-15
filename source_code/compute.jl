@@ -1,9 +1,7 @@
-println("in compute.jl")
-
 using LinearAlgebra
 
-function evolve(A::Matrix{Float64}, t::Float64)
-    return exp(t*A) * [1.0; 0.0]
+function solve_autonomous(x0, A::Matrix{Float64}, t::Float64)
+    return exp(t*A) * x0
 end
 
 function main()
