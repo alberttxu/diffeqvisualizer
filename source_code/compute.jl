@@ -5,13 +5,7 @@ function solve_autonomous(x0, A::Matrix{Float64}, t::Float64)
 end
 
 function main()
-    A = Float64[
-         0 1;
-        -1 0]
-
-    for t in 0:0.1:2
-        println("t = $t, A = ", evolve(A, t))
-    end
+    println(solve_autonomous([1.0,0], Float64[0 1; -1 0], 0.2))
 end
 
 

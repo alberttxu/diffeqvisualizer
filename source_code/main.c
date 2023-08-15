@@ -8,17 +8,6 @@
 
 #include "useful_utils.c"
 
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
-typedef float f32;
-typedef double f64;
-
 // modified from
 // https://blog.esciencecenter.nl/10-examples-of-embedding-julia-in-c-c-66282477e62c
 void check_if_julia_exception_occurred(void)
@@ -118,33 +107,38 @@ int test_julia(void)
       JL_GC_POP();
    }
 
-   /* { */
-   /*    jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1); */
-   /*    jl_array_t *x = jl_alloc_array_1d(array_type, 2); */
-   /*    JL_GC_PUSH1(&x); */
-   /*    f64 *xData = (f64 *) jl_array_data(x); */
-   /*    xData[0] = 1.0; */
-   /*    xData[1] = 0.0; */
+   {
+      puts("===========================");
+      jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1);
+      jl_array_t *x = jl_alloc_array_1d(array_type, 2);
+      f64 *xData = (f64 *) jl_array_data(x);
+      xData[0] = 1.0;
+      xData[1] = 0.0;
 
-   /*    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2); */
-   /*    jl_array_t *A = jl_alloc_array_2d(matrix_type, 4); */
-   /*    JL_GC_PUSH1(&A); */
-   /*    f64 *AData = (f64 *) jl_array_data(A); */
-   /*    AData[0] = 0.0; */
-   /*    AData[1] = -1.0; */
-   /*    AData[2] = 1.0; */
-   /*    AData[3] = 0.0; */
+      jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
+      jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
+      f64 *AData = (f64 *) jl_array_data(A);
+      AData[0] = 0.0;
+      AData[1] = -1.0;
+      AData[2] = 1.0;
+      AData[3] = 0.0;
 
-   /*    jl_value_t *t = jl_box_float64(1.0); */
+      jl_value_t *t = jl_box_float64(0.2);
+      JL_GC_PUSH3(&x, &A, &t);
 
-   /*    jl_function_t *solve_autonomous = jl_get_function(jl_main_module, "solve_autonomous"); */
-   /*    jl_value_t *boxedans = jl_call3(solve_autonomous, */
-   /*                                    (jl_value_t *)x, (jl_value_t *)A, (jl_value_t *)t); */
-   /*    check_if_julia_exception_occurred(); */
-   /*    jl_array_t *ret = (jl_array_t *)boxedans; */
+      jl_function_t *solve_autonomous = jl_get_function(jl_main_module, "solve_autonomous");
+      jl_value_t *boxedans = jl_call3(solve_autonomous,
+                                      (jl_value_t *)x, (jl_value_t *)A, (jl_value_t *)t);
+      check_if_julia_exception_occurred();
+      jl_array_t *xt = (jl_array_t *)boxedans;
+      f64 *xtData = jl_array_data(xt);
+      printf("exp(0.2 * [0 1; -1 0]) * [1.0,0] = [%f,%f]\n",
+            xtData[0], xtData[1]);
+      assert(isapprox(xtData[0], 0.9800665778412415));
+      assert(isapprox(xtData[1], -0.19866933079506127));
 
-   /*    JL_GC_POP(); */
-   /* } */
+      JL_GC_POP();
+   }
 
    jl_atexit_hook(0);
    return 0;

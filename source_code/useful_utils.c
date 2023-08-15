@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assert.h>
+#include <math.h>
 // taken from https://github.com/varnishcache/varnish-cache/blob/master/include/vas.h
 #define AZ(foo)		do { assert((foo) == 0); } while (0)
 #define AN(foo)		do { assert((foo) != 0); } while (0)
@@ -18,6 +19,17 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 #define min3(a,b,c) min(a, min(b, c))
 #define max3(a,b,c) max(a, max(b, c))
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef int8_t i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
+typedef float f32;
+typedef double f64;
 
 void swapint(int *a, int *b)
 {
@@ -64,4 +76,10 @@ float average(float *arr, int n)
 bool inarraybounds(void *ptr, void *low, void *high)
 {
    return ptr >= low && ptr < high;
+}
+
+bool isapprox(f64 a, f64 b)
+{
+   f64 tol = 1e-5;
+   return fabs(a - b) <= tol;
 }
