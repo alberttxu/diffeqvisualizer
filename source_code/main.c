@@ -21,7 +21,7 @@ typedef double f64;
 
 // modified from
 // https://blog.esciencecenter.nl/10-examples-of-embedding-julia-in-c-c-66282477e62c
-void handle_julia_exception(void)
+void check_if_julia_exception_occurred(void)
 {
    jl_value_t *ex = jl_exception_occurred();
    if (ex == NULL)
@@ -41,7 +41,7 @@ void handle_julia_exception(void)
 jl_value_t *eval(const char* code)
 {
    jl_value_t *result = jl_eval_string(code);
-   handle_julia_exception();
+   check_if_julia_exception_occurred();
    assert(result && "Missing return value but no exception occurred!");
    return result;
 }
@@ -52,6 +52,20 @@ int main(void)
    jl_init();
 
    eval("include(\"source_code/compute.jl\")");
+
+   jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1);
+   jl_array_t *x = jl_alloc_array_1d(array_type, 2);
+   JL_GC_PUSH1(&x);
+   f64 *xData = (f64 *) jl_array_data(x);
+   xData[0] = 1.0;
+   xData[1] = 2.0;
+
+   jl_function_t *h = jl_get_function(jl_main_module, "h");
+   jl_value_t *boxedans = jl_call1(h, (jl_value_t *) x);
+   check_if_julia_exception_occurred();
+   assert(jl_typeis(boxedans, jl_float64_type));
+   f64 ans = jl_unbox_float64(boxedans);
+   showfloat(ans);
 
    jl_atexit_hook(0);
    return 0;
