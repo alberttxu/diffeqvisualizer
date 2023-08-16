@@ -175,17 +175,47 @@ int appmain(void)
    f32 theta = 0;
    f32 radius = 1;
 
-   /* f64 t = 0; */
+   f64 t = 0;
+
+   jl_init();
+   eval("include(\"source_code/compute.jl\")");
+
+   jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1);
+   jl_array_t *x = jl_alloc_array_1d(array_type, 2);
+   f64 *xData = (f64 *) jl_array_data(x);
+   xData[0] = 1.0;
+   xData[1] = 0.0;
+
+   jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
+   jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
+   f64 *AData = (f64 *) jl_array_data(A);
+   AData[0] = 0.0;
+   AData[1] = -1.0;
+   AData[2] = 1.0;
+   AData[3] = 0.0;
+
+   JL_GC_PUSH2(&x, &A);
+
+   jl_function_t *solve_autonomous = jl_get_function(jl_main_module, "solve_autonomous");
+   check_if_julia_exception_occurred();
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
 
-#if 1
+#if 0
       Vector2 ballPosition = {radius * cosf(theta), radius * sinf(theta)};
 #else
 
+      jl_value_t *boxedans = jl_call3(solve_autonomous,
+                                      (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
+      JL_GC_PUSH1(&boxedans);
+      check_if_julia_exception_occurred();
+      jl_array_t *xt = (jl_array_t *)boxedans;
+      f64 *xtData = jl_array_data(xt);
+      Vector2 ballPosition = {(f32)xtData[0], (f32)xtData[1]};
+      JL_GC_POP();
 #endif
 
       recentBallPositions[curidx] = coords2pixels(ballPosition);
@@ -209,7 +239,7 @@ int appmain(void)
       histsize = min(histcapacity, histsize + 1);
 
       theta += 0.05f;
-      /* t += 0.05; */
+      t += 0.05;
    }
 
    CloseWindow();
@@ -219,6 +249,7 @@ int appmain(void)
 
 int main(void)
 {
-   test_julia();
+   /* test_julia(); */
+   appmain();
    return 0;
 }

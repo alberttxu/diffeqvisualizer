@@ -11,6 +11,8 @@ WARNINGS="\
 -Wno-unused-function \
 -Wconversion \
 -Wno-sign-conversion \
+-Wno-unused-variable \
+-Wno-unused-but-set-variable
 "
 INCLUDES="\
 -I/opt/local/include \
