@@ -2,6 +2,8 @@
 
 #include <assert.h>
 #include <math.h>
+#include <stdbool.h>
+
 // taken from https://github.com/varnishcache/varnish-cache/blob/master/include/vas.h
 #define AZ(foo)		do { assert((foo) == 0); } while (0)
 #define AN(foo)		do { assert((foo) != 0); } while (0)

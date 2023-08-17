@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 
 #include <raylib.h>
@@ -173,9 +174,6 @@ int appmain(void)
    int curidx = 0;
    int histsize = 0;
 
-   f32 theta = 0;
-   f32 radius = 1;
-
    f64 t = 0;
 
    jl_init();
@@ -205,10 +203,6 @@ int appmain(void)
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
 
-#if 0
-      Vector2 ballPosition = {radius * cosf(theta), radius * sinf(theta)};
-#else
-
       jl_value_t *boxedans = jl_call3(solve_autonomous,
                                       (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
       JL_GC_PUSH1(&boxedans);
@@ -217,9 +211,9 @@ int appmain(void)
       f64 *xtData = jl_array_data(xt);
       Vector2 ballPosition = {(f32)xtData[0], (f32)xtData[1]};
       JL_GC_POP();
-#endif
 
       recentBallPositions[curidx] = coords2pixels(ballPosition);
+      bool reset = false;
 
       BeginDrawing();
          ClearBackground(RAYWHITE);
@@ -234,18 +228,22 @@ int appmain(void)
             DrawCircleV(recentBallPositions[j], radius, MAROON);
          }
 
-         GuiButton((Rectangle){ 25, 255, 300, 30 }, "button");
+         reset = GuiButton((Rectangle){ 25, 255, 100, 30 }, "reset");
 
          DrawFPS(10, 10);
          DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
          /* DrawText(TextFormat("theta = %f", theta), 10, 30, 20, DARKGRAY); */
       EndDrawing();
 
+      t += 0.02;
+
+      if (reset)
+      {
+         t = 0;
+      }
+
       curidx = (curidx+1) % histcapacity;
       histsize = min(histcapacity, histsize + 1);
-
-      theta += 0.02f;
-      t += 0.02;
    }
 
    CloseWindow();
