@@ -7,6 +7,7 @@
 #include <julia.h>
 
 #include "useful_utils.c"
+#include "../dependencies/raygui-3.6/src/raygui.h"
 
 // modified from
 // https://blog.esciencecenter.nl/10-examples-of-embedding-julia-in-c-c-66282477e62c
@@ -167,7 +168,7 @@ int appmain(void)
    InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input");
    SetTargetFPS(60);
 
-#define histcapacity 20
+#define histcapacity 50
    Vector2 recentBallPositions[histcapacity] = {0}; // ring buffer
    int curidx = 0;
    int histsize = 0;
@@ -189,10 +190,10 @@ int appmain(void)
    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
    jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
    f64 *AData = (f64 *) jl_array_data(A);
-   AData[0] = 0.0;
-   AData[1] = -1.0;
-   AData[2] = 1.0;
-   AData[3] = 0.0;
+   AData[0] = 0.6483820385272346;
+   AData[1] = -1.8086122374496931;
+   AData[2] = 0.9185619253668453;
+   AData[3] = -0.7559322222668067;
 
    JL_GC_PUSH2(&x, &A);
 
@@ -219,27 +220,32 @@ int appmain(void)
 #endif
 
       recentBallPositions[curidx] = coords2pixels(ballPosition);
-      {
-         BeginDrawing();
+
+      BeginDrawing();
          ClearBackground(RAYWHITE);
 
          for (int i = 0; i < histsize; i++)
          {
-            f32 radius = 6.0f - 0.5f * i;
+            /* f32 radius = 6.0f - 0.5f * i; */
+            f32 radius = 6.0f - 0.1f * i;
             int j = curidx - i;
             if (j < 0)
               j += histcapacity;
             DrawCircleV(recentBallPositions[j], radius, MAROON);
          }
 
+         GuiButton((Rectangle){ 25, 255, 300, 30 }, "button");
+
          DrawFPS(10, 10);
-         EndDrawing();
-      }
+         DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
+         /* DrawText(TextFormat("theta = %f", theta), 10, 30, 20, DARKGRAY); */
+      EndDrawing();
+
       curidx = (curidx+1) % histcapacity;
       histsize = min(histcapacity, histsize + 1);
 
-      theta += 0.05f;
-      t += 0.05;
+      theta += 0.02f;
+      t += 0.02;
    }
 
    CloseWindow();

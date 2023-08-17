@@ -12,7 +12,7 @@ WARNINGS="\
 -Wconversion \
 -Wno-sign-conversion \
 -Wno-unused-variable \
--Wno-unused-but-set-variable
+-Wno-unused-but-set-variable \
 "
 INCLUDES="\
 -I/opt/local/include \
@@ -22,8 +22,19 @@ LIBS="\
 -L/opt/local/lib \
 -lraylib \
 -ljulia \
--Wl,-rpath,/opt/local/lib
+-Wl,-rpath,/opt/local/lib \
+dependencies/raygui.dylib \
 "
+
+build_raygui() {
+   cp dependencies/raygui-3.6/src/raygui.h dependencies/raygui.c
+   cc -o dependencies/raygui.dylib dependencies/raygui.c -shared -fpic -DRAYGUI_IMPLEMENTATION -framework OpenGL -lm -lpthread -ldl $(pkg-config --libs --cflags raylib)
+}
+
+if [ $1 = "raygui" ]; then
+   build_raygui
+   exit
+fi
 
 if [ $1 = "debug" ]; then
    CFLAGS="$CFLAGS -O0"
