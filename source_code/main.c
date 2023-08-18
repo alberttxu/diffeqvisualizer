@@ -169,8 +169,9 @@ int appmain(void)
    InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input");
    SetTargetFPS(60);
 
+#define numballs 4
 #define histcapacity 50
-   Vector2 recentBallPositions[histcapacity] = {0}; // ring buffer
+   Vector2 recentBallPositions[numballs][histcapacity] = {0}; // ring buffer
    int curidx = 0;
    int histsize = 0;
 
@@ -179,11 +180,17 @@ int appmain(void)
    jl_init();
    eval("include(\"source_code/compute.jl\")");
 
-   jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1);
-   jl_array_t *x = jl_alloc_array_1d(array_type, 2);
+   jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
+   jl_array_t *x = jl_alloc_array_2d(array_type, 2, 4);
    f64 *xData = (f64 *) jl_array_data(x);
    xData[0] = 1.0;
    xData[1] = 0.0;
+   xData[2] = 0.0;
+   xData[3] = 1.0;
+   xData[4] = -1.0;
+   xData[5] = 0.0;
+   xData[6] = 0.0;
+   xData[7] = -1.0;
 
    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
    jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
@@ -209,23 +216,34 @@ int appmain(void)
       check_if_julia_exception_occurred();
       jl_array_t *xt = (jl_array_t *)boxedans;
       f64 *xtData = jl_array_data(xt);
-      Vector2 ballPosition = {(f32)xtData[0], (f32)xtData[1]};
+      Vector2 ballPositions[numballs] = {
+         {(f32)xtData[0], (f32)xtData[1]},
+         {(f32)xtData[2], (f32)xtData[3]},
+         {(f32)xtData[4], (f32)xtData[5]},
+         {(f32)xtData[6], (f32)xtData[7]}
+      };
       JL_GC_POP();
 
-      recentBallPositions[curidx] = coords2pixels(ballPosition);
-      bool reset = false;
+      for (int n = 0; n < numballs; n++)
+      {
+         recentBallPositions[n][curidx] = coords2pixels(ballPositions[n]);
+      }
 
+      bool reset = false;
       BeginDrawing();
          ClearBackground(RAYWHITE);
 
-         for (int i = 0; i < histsize; i++)
+         for (int n = 0; n < numballs; n++)
          {
-            /* f32 radius = 6.0f - 0.5f * i; */
-            f32 radius = 6.0f - 0.1f * i;
-            int j = curidx - i;
-            if (j < 0)
-              j += histcapacity;
-            DrawCircleV(recentBallPositions[j], radius, MAROON);
+            for (int i = 0; i < histsize; i++)
+            {
+               /* f32 radius = 6.0f - 0.5f * i; */
+               f32 radius = 6.0f - 0.1f * i;
+               int j = curidx - i;
+               if (j < 0)
+                 j += histcapacity;
+               DrawCircleV(recentBallPositions[n][j], radius, MAROON);
+            }
          }
 
          reset = GuiButton((Rectangle){ 25, 255, 100, 30 }, "reset");
@@ -240,6 +258,7 @@ int appmain(void)
       if (reset)
       {
          t = 0;
+         histsize = 0;
       }
 
       curidx = (curidx+1) % histcapacity;
