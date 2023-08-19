@@ -147,8 +147,8 @@ int test_julia(void)
 }
 
 
-const int screenWidth = 800;
-const int screenHeight = 450;
+const int screenWidth = 1618;
+const int screenHeight = 1000;
 #define pixelsperunit 100
 
 // 0,0 = center of screen
@@ -164,12 +164,17 @@ Vector2 coords2pixels(Vector2 graph_coords)
    return pixel_coords;
 }
 
+f64 randfloat64(f64 minval, f64 maxval)
+{
+   return (f64)rand() / (f64)(RAND_MAX) * (maxval - minval) + minval;
+}
+
 int appmain(void)
 {
    InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input");
    SetTargetFPS(60);
 
-#define numballs 4
+#define numballs 30
 #define histcapacity 50
    Vector2 recentBallPositions[numballs][histcapacity] = {0}; // ring buffer
    int curidx = 0;
@@ -181,16 +186,13 @@ int appmain(void)
    eval("include(\"source_code/compute.jl\")");
 
    jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
-   jl_array_t *x = jl_alloc_array_2d(array_type, 2, 4);
+   jl_array_t *x = jl_alloc_array_2d(array_type, 2, numballs);
    f64 *xData = (f64 *) jl_array_data(x);
-   xData[0] = 1.0;
-   xData[1] = 0.0;
-   xData[2] = 0.0;
-   xData[3] = 1.0;
-   xData[4] = -1.0;
-   xData[5] = 0.0;
-   xData[6] = 0.0;
-   xData[7] = -1.0;
+   for (int i = 0; i < numballs; i += 1)
+   {
+      xData[2*i + 0] = randfloat64(-5, 5);
+      xData[2*i + 1] = randfloat64(-5, 5);
+   }
 
    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
    jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
@@ -216,12 +218,14 @@ int appmain(void)
       check_if_julia_exception_occurred();
       jl_array_t *xt = (jl_array_t *)boxedans;
       f64 *xtData = jl_array_data(xt);
-      Vector2 ballPositions[numballs] = {
-         {(f32)xtData[0], (f32)xtData[1]},
-         {(f32)xtData[2], (f32)xtData[3]},
-         {(f32)xtData[4], (f32)xtData[5]},
-         {(f32)xtData[6], (f32)xtData[7]}
-      };
+
+      Vector2 ballPositions[numballs];
+      for (int i = 0; i < numballs; i += 1)
+      {
+         ballPositions[i].x = (f32)xtData[2*i + 0];
+         ballPositions[i].y = (f32)xtData[2*i + 1];
+      }
+
       JL_GC_POP();
 
       for (int n = 0; n < numballs; n++)
@@ -237,7 +241,6 @@ int appmain(void)
          {
             for (int i = 0; i < histsize; i++)
             {
-               /* f32 radius = 6.0f - 0.5f * i; */
                f32 radius = 6.0f - 0.1f * i;
                int j = curidx - i;
                if (j < 0)
@@ -259,6 +262,12 @@ int appmain(void)
       {
          t = 0;
          histsize = 0;
+
+         for (int i = 0; i < numballs; i++)
+         {
+            xData[i+0] = randfloat64(-2, 2);
+            xData[i+1] = randfloat64(-2, 2);
+         }
       }
 
       curidx = (curidx+1) % histcapacity;
