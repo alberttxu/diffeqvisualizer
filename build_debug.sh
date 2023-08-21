@@ -2,4 +2,4 @@
 
 set -xe
 
-/usr/bin/time -o buildtime.txt ./build.sh debug
+/usr/bin/time -o debugbuildtime.txt ./build.sh debug
