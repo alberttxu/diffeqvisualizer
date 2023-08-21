@@ -2,3 +2,4 @@
 main
 dependencies/raygui.c
 dependencies/raygui.dylib
+dependencies/TracyClient.o

@@ -9,6 +9,11 @@
 
 #include "useful_utils.c"
 #include "../dependencies/raygui-3.6/src/raygui.h"
+#include "../dependencies/tracy/public/tracy/TracyC.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // modified from
 // https://blog.esciencecenter.nl/10-examples-of-embedding-julia-in-c-c-66282477e62c
@@ -133,7 +138,7 @@ int test_julia(void)
                                       (jl_value_t *)x, (jl_value_t *)A, (jl_value_t *)t);
       check_if_julia_exception_occurred();
       jl_array_t *xt = (jl_array_t *)boxedans;
-      f64 *xtData = jl_array_data(xt);
+      f64 *xtData = (f64 *)jl_array_data(xt);
       printf("exp(0.2 * [0 1; -1 0]) * [1.0,0] = [%f,%f]\n",
             xtData[0], xtData[1]);
       assert(isapprox(xtData[0], 0.9800665778412415));
@@ -209,15 +214,23 @@ int appmain(void)
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
+      TracyCFrameMark;
+      BeginDrawing();
+
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
 
-      jl_value_t *boxedans = jl_call3(solve_autonomous,
-                                      (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
-      JL_GC_PUSH1(&boxedans);
-      check_if_julia_exception_occurred();
-      jl_array_t *xt = (jl_array_t *)boxedans;
-      f64 *xtData = jl_array_data(xt);
+      f64 *xtData;
+      {
+         TracyCZoneN(julia, "julia", true);
+         jl_value_t *boxedans = jl_call3(solve_autonomous,
+                                         (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
+         JL_GC_PUSH1(&boxedans);
+         check_if_julia_exception_occurred();
+         jl_array_t *xt = (jl_array_t *)boxedans;
+         xtData = (f64 *)jl_array_data(xt);
+         TracyCZoneEnd(julia);
+      }
 
       Vector2 ballPositions[numballs];
       for (int i = 0; i < numballs; i += 1)
@@ -234,7 +247,9 @@ int appmain(void)
       }
 
       bool reset = false;
-      BeginDrawing();
+      {
+         TracyCZoneN(draw, "draw", true);
+
          ClearBackground(RAYWHITE);
 
          for (int n = 0; n < numballs; n++)
@@ -253,8 +268,9 @@ int appmain(void)
 
          DrawFPS(10, 10);
          DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
-         /* DrawText(TextFormat("theta = %f", theta), 10, 30, 20, DARKGRAY); */
-      EndDrawing();
+
+         TracyCZoneEnd(draw);
+      }
 
       t += 0.02;
 
@@ -263,15 +279,17 @@ int appmain(void)
          t = 0;
          histsize = 0;
 
-         for (int i = 0; i < numballs; i++)
+         for (int i = 0; i < numballs; i += 1)
          {
-            xData[i+0] = randfloat64(-2, 2);
-            xData[i+1] = randfloat64(-2, 2);
+            xData[2*i + 0] = randfloat64(-5, 5);
+            xData[2*i + 1] = randfloat64(-5, 5);
          }
       }
 
       curidx = (curidx+1) % histcapacity;
       histsize = min(histcapacity, histsize + 1);
+
+      EndDrawing(); // raylib will wait until next frame
    }
 
    CloseWindow();
@@ -285,3 +303,7 @@ int main(void)
    appmain();
    return 0;
 }
+
+#ifdef __cplusplus
+} // extern C
+#endif
