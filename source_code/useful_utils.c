@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 // taken from https://github.com/varnishcache/varnish-cache/blob/master/include/vas.h
 #define AZ(foo)		do { assert((foo) == 0); } while (0)
@@ -84,4 +85,9 @@ bool isapprox(f64 a, f64 b)
 {
    f64 tol = 1e-5;
    return fabs(a - b) <= tol;
+}
+
+f64 randfloat64(f64 minval, f64 maxval)
+{
+   return (f64)rand() / (f64)(RAND_MAX) * (maxval - minval) + minval;
 }
