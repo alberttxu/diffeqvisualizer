@@ -36,7 +36,7 @@ Vector2 coords2pixels(Vector2 graph_coords)
 int appmain(void)
 {
    InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input");
-   SetTargetFPS(60);
+   SetTargetFPS(62);
 
 #define numballs 30
 #define histcapacity 50
