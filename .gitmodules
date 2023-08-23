@@ -1,3 +1,6 @@
 [submodule "dependencies/tracy"]
 	path = dependencies/tracy
 	url = https://github.com/wolfpld/tracy.git
+[submodule "dependencies/raylib"]
+	path = dependencies/raylib
+	url = https://github.com/raysan5/raylib.git
