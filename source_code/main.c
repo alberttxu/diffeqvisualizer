@@ -17,7 +17,7 @@
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#include "../dependencies/raygui-3.6/src/raygui.h"
+#include "../dependencies/raygui/src/raygui.h"
 #pragma GCC diagnostic pop
 
 #include "../dependencies/tracy/public/tracy/TracyC.h"
