@@ -9,8 +9,17 @@
 
 #include "useful_utils.c"
 #include "julia_helpers.c"
+
 #define RAYGUI_IMPLEMENTATION
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #include "../dependencies/raygui-3.6/src/raygui.h"
+#pragma GCC diagnostic pop
+
 #include "../dependencies/tracy/public/tracy/TracyC.h"
 
 #ifdef __cplusplus
