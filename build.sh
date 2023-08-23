@@ -12,22 +12,35 @@ WARNINGS="\
 -Wconversion \
 -Wno-sign-conversion \
 "
-INCLUDES="\
--I/opt/local/include \
--I/opt/local/include/julia \
-"
-LIBS="\
--L/opt/local/lib \
--lraylib \
--ljulia \
--Wl,-rpath,/opt/local/lib \
-dependencies/raygui.dylib \
-"
 
-build_raygui() {
-   cp dependencies/raygui-3.6/src/raygui.h dependencies/raygui.c
-   cc -o dependencies/raygui.dylib dependencies/raygui.c -shared -fpic -DRAYGUI_IMPLEMENTATION -framework OpenGL -lm -lpthread -ldl $(pkg-config --libs --cflags raylib)
-}
+echo "Operating system: $(uname)"
+
+if [ "$(uname)" = Linux ]; then
+   JULIA_DIR="$HOME/julia-1.9.2"
+   INCLUDES="\
+   -I dependencies/raylib/src \
+   -I $JULIA_DIR/include/julia \
+   "
+   LIBS="\
+   dependencies/raylib/src/libraylib.a \
+   -L $JULIA_DIR/lib
+   -l julia \
+   -Wl,-rpath,$JULIA_DIR/lib \
+   -l m \
+   "
+elif [ "$(uname)" = Darwin ]; then
+   INCLUDES="\
+   -I/opt/local/include \
+   -I/opt/local/include/julia \
+   "
+   LIBS="\
+   -L /opt/local/lib \
+   -l raylib \
+   -l julia \
+   -Wl,-rpath,/opt/local/lib \
+   "
+fi
+
 
 build_tracyserver()
 {
@@ -42,10 +55,6 @@ build_tracyclient()
    mv TracyClient.o dependencies
 }
 
-if [ $1 = "raygui" ]; then
-   build_raygui
-   exit
-fi
 if [ $1 = "tracyserver" ]; then
    build_tracyserver
    exit

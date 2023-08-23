@@ -9,6 +9,7 @@
 
 #include "useful_utils.c"
 #include "julia_helpers.c"
+#define RAYGUI_IMPLEMENTATION
 #include "../dependencies/raygui-3.6/src/raygui.h"
 #include "../dependencies/tracy/public/tracy/TracyC.h"
 
