@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 CC=cc
 CFLAGS="-g3"
@@ -41,6 +41,12 @@ elif [ "$(uname)" = Darwin ]; then
    "
 fi
 
+build_raylib()
+{
+   pushd dependencies/raylib/src
+   make PLATFORM=PLATFORM_DESKTOP
+   popd
+}
 
 build_tracyserver()
 {
@@ -55,6 +61,10 @@ build_tracyclient()
    mv TracyClient.o dependencies
 }
 
+if [ $1 = "raylib" ]; then
+   build_raylib
+   exit
+fi
 if [ $1 = "tracyserver" ]; then
    build_tracyserver
    exit
