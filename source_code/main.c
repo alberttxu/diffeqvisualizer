@@ -26,8 +26,8 @@
 extern "C" {
 #endif
 
-#define screenWidth 1618
-#define screenHeight 1000
+#define screenWidth 814
+#define screenHeight 500
 #define pixelsperunit 100
 
 // 0,0 = center of screen
@@ -49,7 +49,7 @@ int appmain(void)
    SetTargetFPS(62);
 
 #define numballs 30
-#define histcapacity 50
+#define histcapacity 20
    Vector2 recentBallPositions[numballs][histcapacity] = {0}; // ring buffer
    int curidx = 0;
    int histsize = 0;
@@ -81,9 +81,11 @@ int appmain(void)
    jl_function_t *solve_autonomous = jl_get_function(jl_main_module, "solve_autonomous");
    check_if_julia_exception_occurred();
 
+   f64 prevframetime_ms = 0;
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       TracyCFrameMark;
+      f64 t_framestart = GetTime();
       BeginDrawing();
 
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
@@ -121,11 +123,12 @@ int appmain(void)
 
          ClearBackground(RAYWHITE);
 
+         // draw comets
          for (int n = 0; n < numballs; n++)
          {
             for (int i = 0; i < histsize; i++)
             {
-               f32 radius = 6.0f - 0.1f * i;
+               f32 radius = 3.0f - 0.1f * i;
                int j = curidx - i;
                if (j < 0)
                  j += histcapacity;
@@ -137,6 +140,7 @@ int appmain(void)
 
          DrawFPS(10, 10);
          DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
+         DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
 
          TracyCZoneEnd(draw);
       }
@@ -158,6 +162,8 @@ int appmain(void)
       curidx = (curidx+1) % histcapacity;
       histsize = min(histcapacity, histsize + 1);
 
+      f64 t_frameend = GetTime();
+      prevframetime_ms = (t_frameend - t_framestart) * 1000;
       EndDrawing(); // raylib will wait until next frame
    }
 
