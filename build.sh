@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 CC=cc
 CFLAGS="-g3"
@@ -13,46 +13,52 @@ WARNINGS="\
 -Wno-sign-conversion \
 "
 
-echo "Operating system: $(uname)"
+OS=`uname`
+echo "Operating system: $OS"
 
-if [ "$(uname)" = Linux ]; then
+if [ $OS = Linux ]; then
    JULIA_DIR="$HOME/julia-1.9.2"
    INCLUDES="\
-   -I dependencies/raylib/src \
-   -I $JULIA_DIR/include/julia \
+   -Idependencies/raylib/src \
+   -I$JULIA_DIR/include/julia \
    "
    LIBS="\
    dependencies/raylib/src/libraylib.a \
-   -L $JULIA_DIR/lib
-   -l julia \
+   -L$JULIA_DIR/lib
+   -ljulia \
    -Wl,-rpath,$JULIA_DIR/lib \
    -l m \
    "
-elif [ "$(uname)" = Darwin ]; then
+
+elif [ $OS = Darwin ]; then
    INCLUDES="\
    -I/opt/local/include \
    -I/opt/local/include/julia \
+   -Idependencies/raylib/src \
    "
    LIBS="\
-   -L /opt/local/lib \
-   -l raylib \
-   -l julia \
+   -L/opt/local/lib \
+   -ljulia \
    -Wl,-rpath,/opt/local/lib \
+   -lraylib \
    "
+   # Statically linking raylib works, but is slower by 0.3 seconds.
+   # LIBS="\
+   # dependencies/raylib/src/libraylib.a \
+   # -framework Cocoa -framework OpenGL -framework IOKit \
+   # "
 fi
 
 build_raylib()
 {
-   pushd dependencies/raylib/src
-   make PLATFORM=PLATFORM_DESKTOP
-   popd
+   cd dependencies/raylib/src \
+   && make PLATFORM=PLATFORM_DESKTOP
 }
 
 build_tracyserver()
 {
-   pushd dependencies/tracy/profiler/build/unix
-   CPATH=/opt/local/include/capstone LIBRARY_PATH=/opt/local/lib make -j
-   popd
+   cd dependencies/tracy/profiler/build/unix \
+   && CPATH=/opt/local/include/capstone LIBRARY_PATH=/opt/local/lib make -j
 }
 
 build_tracyclient()
