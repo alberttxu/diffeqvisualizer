@@ -96,47 +96,38 @@ int main(void)
       f64 t_framestart = GetTime();
       BeginDrawing();
 
+      ClearBackground(RAYWHITE);
       DrawFPS(10, 10);
       DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
       DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
 
-      if (paused)
+      Vector2 ballPositions[numballs];
+      { TracyCZoneN(julia, "julia", true);
+
+      jl_value_t *matrix_2xN_ballpositions = jl_call3(
+            solve_autonomous, (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
+      JL_GC_PUSH1(&matrix_2xN_ballpositions);
+      check_if_julia_exception_occurred();
+
+      jl_array_t *xt = (jl_array_t *)matrix_2xN_ballpositions;
+      f64 *xtData = (f64 *)jl_array_data(xt);
+      for (int i = 0; i < numballs; i += 1)
       {
-         DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
+         ballPositions[i].x = (f32)xtData[2*i + 0];
+         ballPositions[i].y = (f32)xtData[2*i + 1];
       }
-      else
-      {
-         Vector2 ballPositions[numballs];
-         {
-            TracyCZoneN(julia, "julia", true);
-            jl_value_t *matrix_2xN_ballpositions = jl_call3(
-                  solve_autonomous, (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
-            JL_GC_PUSH1(&matrix_2xN_ballpositions);
-            check_if_julia_exception_occurred();
+      JL_GC_POP();
 
-            jl_array_t *xt = (jl_array_t *)matrix_2xN_ballpositions;
-            f64 *xtData = (f64 *)jl_array_data(xt);
-            for (int i = 0; i < numballs; i += 1)
-            {
-               ballPositions[i].x = (f32)xtData[2*i + 0];
-               ballPositions[i].y = (f32)xtData[2*i + 1];
-            }
-
-            t += 0.02;
-            JL_GC_POP();
-            TracyCZoneEnd(julia);
-         }
-
-         for (int n = 0; n < numballs; n++)
-         {
-            recentBallPositions[n][curidx] = coords2pixels(ballPositions[n]);
-         }
+      TracyCZoneEnd(julia);
       }
 
+      for (int n = 0; n < numballs; n++)
       {
-      TracyCZoneN(drawballs, "draw balls", true);
+         recentBallPositions[n][curidx] = coords2pixels(ballPositions[n]);
+      }
 
-      ClearBackground(RAYWHITE);
+      { TracyCZoneN(drawballs, "draw balls", true);
+
       for (int n = 0; n < numballs; n++)
       {
          for (int i = 0; i < histsize; i++)
@@ -152,9 +143,12 @@ int main(void)
       TracyCZoneEnd(drawballs);
       }
 
+      { TracyCZoneN(postiter, "Post-iteration work", true);
+
       resetwasclicked = GuiButton((Rectangle){ 25, 100, 100, 30 }, "reset");
       pausewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "pause");
       resumewasclicked = GuiButton((Rectangle){ 25, 160, 100, 30 }, "resume");
+
       if (pausewasclicked)
       {
          paused = true;
@@ -175,14 +169,23 @@ int main(void)
          }
       }
 
-      if (!paused)
+      if (paused)
+      {
+         DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
+      }
+      else
       {
          curidx = (curidx+1) % histcapacity;
          histsize = min(histcapacity, histsize + 1);
+         t += 0.02;
       }
 
       f64 t_frameend = GetTime();
       prevframetime_ms = (t_frameend - t_framestart) * 1000;
+
+      TracyCZoneEnd(postiter);
+      }
+
       EndDrawing(); // raylib will wait until next frame
    }
 
