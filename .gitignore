@@ -1,6 +1,4 @@
 *.dSYM
 main
 tests
-dependencies/raygui.c
-dependencies/raygui.dylib
 dependencies/TracyClient.o

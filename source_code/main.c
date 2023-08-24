@@ -26,8 +26,8 @@
 extern "C" {
 #endif
 
-#define screenWidth 814
-#define screenHeight 500
+#define screenwidth 814
+#define screenheight 500
 #define pixelsperunit 100
 
 // 0,0 = center of screen
@@ -37,15 +37,15 @@ static inline
 Vector2 coords2pixels(Vector2 graph_coords)
 {
    Vector2 pixel_coords = {
-       graph_coords.x * pixelsperunit + screenWidth / 2,
-      -graph_coords.y * pixelsperunit + screenHeight / 2
+       graph_coords.x * pixelsperunit + screenwidth / 2,
+      -graph_coords.y * pixelsperunit + screenheight / 2
    };
    return pixel_coords;
 }
 
 int appmain(void)
 {
-   InitWindow(screenWidth, screenHeight, "raylib [core] example - keyboard input");
+   InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
    SetTargetFPS(62);
 
 #define numballs 30
@@ -82,48 +82,75 @@ int appmain(void)
    check_if_julia_exception_occurred();
 
    f64 prevframetime_ms = 0;
+   bool paused = false;
+   bool resetwasclicked = false;
+   bool pausewasclicked = false;
+   bool resumewasclicked = false;
+
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       TracyCFrameMark;
       f64 t_framestart = GetTime();
       BeginDrawing();
+      resetwasclicked = GuiButton((Rectangle){ 25, 100, 100, 30 }, "reset");
+      pausewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "pause");
+      resumewasclicked = GuiButton((Rectangle){ 25, 160, 100, 30 }, "resume");
+
+      DrawFPS(10, 10);
+      DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
+      DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
 
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
 
-      f64 *xtData;
+      if (pausewasclicked)
       {
-         TracyCZoneN(julia, "julia", true);
-         jl_value_t *boxedans = jl_call3(solve_autonomous,
-                                         (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
-         JL_GC_PUSH1(&boxedans);
-         check_if_julia_exception_occurred();
-         jl_array_t *xt = (jl_array_t *)boxedans;
-         xtData = (f64 *)jl_array_data(xt);
-         TracyCZoneEnd(julia);
+         paused = true;
+      }
+      else if (resumewasclicked)
+      {
+         paused = false;
       }
 
-      Vector2 ballPositions[numballs];
-      for (int i = 0; i < numballs; i += 1)
+      if (paused)
       {
-         ballPositions[i].x = (f32)xtData[2*i + 0];
-         ballPositions[i].y = (f32)xtData[2*i + 1];
+         DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
+      }
+      else
+      {
+
+         Vector2 ballPositions[numballs];
+         {
+            TracyCZoneN(julia, "julia", true);
+            jl_value_t *matrix_2xN_ballpositions = jl_call3(
+                  solve_autonomous, (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
+            JL_GC_PUSH1(&matrix_2xN_ballpositions);
+            check_if_julia_exception_occurred();
+
+            jl_array_t *xt = (jl_array_t *)matrix_2xN_ballpositions;
+            f64 *xtData = (f64 *)jl_array_data(xt);
+            for (int i = 0; i < numballs; i += 1)
+            {
+               ballPositions[i].x = (f32)xtData[2*i + 0];
+               ballPositions[i].y = (f32)xtData[2*i + 1];
+            }
+
+            t += 0.02;
+            JL_GC_POP();
+            TracyCZoneEnd(julia);
+         }
+
+         for (int n = 0; n < numballs; n++)
+         {
+            recentBallPositions[n][curidx] = coords2pixels(ballPositions[n]);
+         }
       }
 
-      JL_GC_POP();
-
-      for (int n = 0; n < numballs; n++)
       {
-         recentBallPositions[n][curidx] = coords2pixels(ballPositions[n]);
-      }
-
-      bool reset = false;
-      {
-         TracyCZoneN(draw, "draw", true);
+         TracyCZoneN(draw, "draw balls", true);
 
          ClearBackground(RAYWHITE);
 
-         // draw comets
          for (int n = 0; n < numballs; n++)
          {
             for (int i = 0; i < histsize; i++)
@@ -131,23 +158,21 @@ int appmain(void)
                f32 radius = 3.0f - 0.1f * i;
                int j = curidx - i;
                if (j < 0)
-                 j += histcapacity;
+                  j += histcapacity;
                DrawCircleV(recentBallPositions[n][j], radius, MAROON);
             }
          }
 
-         reset = GuiButton((Rectangle){ 25, 255, 100, 30 }, "reset");
-
-         DrawFPS(10, 10);
-         DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
-         DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
-
          TracyCZoneEnd(draw);
       }
 
-      t += 0.02;
+      if (!paused)
+      {
+         curidx = (curidx+1) % histcapacity;
+         histsize = min(histcapacity, histsize + 1);
+      }
 
-      if (reset)
+      if (resetwasclicked)
       {
          t = 0;
          histsize = 0;
@@ -158,9 +183,6 @@ int appmain(void)
             xData[2*i + 1] = randfloat64(-5, 5);
          }
       }
-
-      curidx = (curidx+1) % histcapacity;
-      histsize = min(histcapacity, histsize + 1);
 
       f64 t_frameend = GetTime();
       prevframetime_ms = (t_frameend - t_framestart) * 1000;
