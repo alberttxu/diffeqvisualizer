@@ -43,7 +43,7 @@ Vector2 coords2pixels(Vector2 graph_coords)
    return pixel_coords;
 }
 
-int appmain(void)
+int main(void)
 {
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
    SetTargetFPS(62);
@@ -89,28 +89,16 @@ int appmain(void)
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
+      if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
+         break;
+
       TracyCFrameMark;
       f64 t_framestart = GetTime();
       BeginDrawing();
-      resetwasclicked = GuiButton((Rectangle){ 25, 100, 100, 30 }, "reset");
-      pausewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "pause");
-      resumewasclicked = GuiButton((Rectangle){ 25, 160, 100, 30 }, "resume");
 
       DrawFPS(10, 10);
       DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
       DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
-
-      if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
-         break;
-
-      if (pausewasclicked)
-      {
-         paused = true;
-      }
-      else if (resumewasclicked)
-      {
-         paused = false;
-      }
 
       if (paused)
       {
@@ -118,7 +106,6 @@ int appmain(void)
       }
       else
       {
-
          Vector2 ballPositions[numballs];
          {
             TracyCZoneN(julia, "julia", true);
@@ -147,32 +134,36 @@ int appmain(void)
       }
 
       {
-         TracyCZoneN(draw, "draw balls", true);
+      TracyCZoneN(drawballs, "draw balls", true);
 
-         ClearBackground(RAYWHITE);
-
-         for (int n = 0; n < numballs; n++)
-         {
-            for (int i = 0; i < histsize; i++)
-            {
-               f32 radius = 3.0f - 0.1f * i;
-               int j = curidx - i;
-               if (j < 0)
-                  j += histcapacity;
-               DrawCircleV(recentBallPositions[n][j], radius, MAROON);
-            }
-         }
-
-         TracyCZoneEnd(draw);
-      }
-
-      if (!paused)
+      ClearBackground(RAYWHITE);
+      for (int n = 0; n < numballs; n++)
       {
-         curidx = (curidx+1) % histcapacity;
-         histsize = min(histcapacity, histsize + 1);
+         for (int i = 0; i < histsize; i++)
+         {
+            f32 radius = 3.0f - 0.1f * i;
+            int j = curidx - i;
+            if (j < 0)
+               j += histcapacity;
+            DrawCircleV(recentBallPositions[n][j], radius, MAROON);
+         }
       }
 
-      if (resetwasclicked)
+      TracyCZoneEnd(drawballs);
+      }
+
+      resetwasclicked = GuiButton((Rectangle){ 25, 100, 100, 30 }, "reset");
+      pausewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "pause");
+      resumewasclicked = GuiButton((Rectangle){ 25, 160, 100, 30 }, "resume");
+      if (pausewasclicked)
+      {
+         paused = true;
+      }
+      else if (resumewasclicked)
+      {
+         paused = false;
+      }
+      else if (resetwasclicked)
       {
          t = 0;
          histsize = 0;
@@ -184,6 +175,12 @@ int appmain(void)
          }
       }
 
+      if (!paused)
+      {
+         curidx = (curidx+1) % histcapacity;
+         histsize = min(histcapacity, histsize + 1);
+      }
+
       f64 t_frameend = GetTime();
       prevframetime_ms = (t_frameend - t_framestart) * 1000;
       EndDrawing(); // raylib will wait until next frame
@@ -191,13 +188,6 @@ int appmain(void)
 
    CloseWindow();
    jl_atexit_hook(0);
-   return 0;
-}
-
-int main(void)
-{
-   /* test_julia(); */
-   appmain();
    return 0;
 }
 
