@@ -5,7 +5,6 @@ CFLAGS="-g3"
 WARNINGS="\
 -Wall \
 -Wextra \
--Wstrict-prototypes \
 -Wdouble-promotion \
 -Wno-unused-parameter \
 -Wno-unused-function \
@@ -41,6 +40,13 @@ elif [ $OS = Darwin ]; then
    -ljulia \
    -Wl,-rpath,/opt/local/lib \
    -lraylib \
+   dependencies/rlImGui/_bin/Debug/librlImGui.a \
+   -lc++
+   dependencies/cimgui/cimgui.o \
+   dependencies/cimgui/imgui/imgui.o \
+   dependencies/cimgui/imgui/imgui_draw.o \
+   dependencies/cimgui/imgui/imgui_tables.o \
+   dependencies/cimgui/imgui/imgui_widgets.o \
    "
    # Statically linking raylib works, but is slower by 0.3 seconds.
    # LIBS="\

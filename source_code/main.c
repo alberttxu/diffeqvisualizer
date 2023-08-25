@@ -9,6 +9,10 @@
 
 #include "useful_utils.c"
 #include "julia_helpers.c"
+#include "../dependencies/rlImGui/rlImGui.h"
+
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS 1
+#include "../dependencies/cimgui/cimgui.h"
 
 #define RAYGUI_IMPLEMENTATION
 #pragma GCC diagnostic push
@@ -87,6 +91,10 @@ int main(void)
    bool pausewasclicked = false;
    bool resumewasclicked = false;
 
+   rlImGuiSetup(true);
+   igCreateContext(NULL);
+   ImGuiIO *io = igGetIO();
+
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
@@ -95,6 +103,15 @@ int main(void)
       TracyCFrameMark;
       f64 t_framestart = GetTime();
       BeginDrawing();
+      rlImGuiBegin();
+
+      igBegin("mainwindow", NULL, ImGuiWindowFlags_NoTitleBar);
+      static float f = 0.0f;
+      igText("Hello World!");
+      igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", 0);
+      igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate);
+      igEnd();
+      igShowDemoWindow(NULL);
 
       ClearBackground(RAYWHITE);
       DrawFPS(10, 10);
@@ -186,6 +203,7 @@ int main(void)
       TracyCZoneEnd(postiter);
       }
 
+      rlImGuiEnd();
       EndDrawing(); // raylib will wait until next frame
    }
 
