@@ -92,7 +92,7 @@ int main(void)
    bool resumewasclicked = false;
 
    rlImGuiSetup(true);
-   igCreateContext(NULL);
+   // igCreateContext(NULL);
    ImGuiIO *io = igGetIO();
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
@@ -105,13 +105,12 @@ int main(void)
       BeginDrawing();
       rlImGuiBegin();
 
-      igBegin("mainwindow", NULL, ImGuiWindowFlags_NoTitleBar);
-      static float f = 0.0f;
-      igText("Hello World!");
-      igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", 0);
-      igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate);
-      igEnd();
-      igShowDemoWindow(NULL);
+      // igBegin("mainwindow", NULL, ImGuiWindowFlags_NoTitleBar);
+      // static float f = 0.0f;
+      // igText("Hello World!");
+      // igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", 0);
+      // igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0 / io->Framerate, (f64) io->Framerate);
+      // igEnd();
 
       ClearBackground(RAYWHITE);
       DrawFPS(10, 10);
@@ -163,18 +162,7 @@ int main(void)
       { TracyCZoneN(postiter, "Post-iteration work", true);
 
       resetwasclicked = GuiButton((Rectangle){ 25, 100, 100, 30 }, "reset");
-      pausewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "pause");
-      resumewasclicked = GuiButton((Rectangle){ 25, 160, 100, 30 }, "resume");
-
-      if (pausewasclicked)
-      {
-         paused = true;
-      }
-      else if (resumewasclicked)
-      {
-         paused = false;
-      }
-      else if (resetwasclicked)
+      if (resetwasclicked)
       {
          t = 0;
          histsize = 0;
@@ -189,12 +177,19 @@ int main(void)
       if (paused)
       {
          DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
+         resumewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "resume");
+         if (resumewasclicked)
+            paused = false;
       }
       else
       {
          curidx = (curidx+1) % histcapacity;
          histsize = min(histcapacity, histsize + 1);
          t += 0.02;
+
+         pausewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "pause");
+         if (pausewasclicked)
+            paused = true;
       }
 
       f64 t_frameend = GetTime();
