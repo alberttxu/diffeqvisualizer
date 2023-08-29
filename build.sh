@@ -1,7 +1,8 @@
 #!/bin/sh
 
-CC=cc
-CFLAGS="-g3"
+CC=c++
+CFLAGS="-std=c++11 -g3"
+
 WARNINGS="\
 -Wall \
 -Wextra \
@@ -94,12 +95,11 @@ fi
 if [ $1 = "debug" ]; then
    CFLAGS="$CFLAGS -O0"
 elif [ $1 = "sanitize" ]; then
-   CC="/opt/local/bin/clang-mp-16"
+   CC="/opt/local/bin/clang++-mp-16"
    CFLAGS="$CFLAGS -fsanitize=address -fno-omit-frame-pointer -O3"
 elif [ $1 = "profile" ]; then
    CFLAGS="$CFLAGS -O3 -D TRACY_ENABLE -march=native"
    LIBS="$LIBS dependencies/TracyClient.o"
-   CC="c++ -std=c++11"
 elif [ $1 = "tests" ]; then
    $CC $CFLAGS $WARNINGS $INCLUDES -o tests source_code/tests.c $LIBS
    exit

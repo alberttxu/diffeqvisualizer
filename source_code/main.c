@@ -92,8 +92,7 @@ int main(void)
    bool pausewasclicked = false;
    bool resumewasclicked = false;
 
-   /* rlImGuiSetup(true); */
-   /* ImGuiIO *io = igGetIO(); */
+   // rlImGuiSetup(true);
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
@@ -106,14 +105,15 @@ int main(void)
 
       BeginDrawing();
 
-      /* rlImGuiBegin(); */
-      /* igBegin("mainwindow", NULL, 0); */
-      /* static float f = 0.0f; */
-      /* igText("Hello World!"); */
-      /* igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", 0); */
-      /* igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0 / io->Framerate, (f64) io->Framerate); */
-      /* igEnd(); */
-      /* rlImGuiEnd(); */
+      // rlImGuiBegin();
+      // igBegin("mainwindow", NULL, 0);
+      // ImGuiIO *io = igGetIO();
+      // static float f = 0.0f;
+      // igText("Hello World!");
+      // igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", 0);
+      // igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0 / io->Framerate, (f64) io->Framerate);
+      // igEnd();
+      // rlImGuiEnd();
 
       ClearBackground(RAYWHITE);
       DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
