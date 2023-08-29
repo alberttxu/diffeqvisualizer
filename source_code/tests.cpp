@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "useful_utils.c"
-#include "julia_helpers.c"
+#include "useful_utils.cpp"
+#include "julia_helpers.cpp"
 
 typedef f64 (*g_ptr)(f64 x);
 g_ptr g = NULL;

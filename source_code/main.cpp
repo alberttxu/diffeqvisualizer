@@ -7,8 +7,8 @@
 #include <raylib.h>
 #include <julia.h>
 
-#include "useful_utils.c"
-#include "julia_helpers.c"
+#include "useful_utils.cpp"
+#include "julia_helpers.cpp"
 #include "../dependencies/rlImGui/rlImGui.h"
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS 1
@@ -21,19 +21,17 @@
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "../dependencies/raygui/src/raygui.h"
 #pragma GCC diagnostic pop
 
-#include "../dependencies/tracy/public/tracy/TracyC.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "../dependencies/tracy/public/tracy/Tracy.hpp"
 
 #define screenwidth 814
 #define screenheight 500
 #define pixelsperunit 100
-#define targetfps 61
+#define targetfps 62
 #define targetperiod (1.0/(f64)targetfps)
 
 // 0,0 = center of screen
@@ -55,7 +53,7 @@ int main(void)
 
 #define numballs 30
 #define histcapacity 20
-   Vector2 recentBallPositions[numballs][histcapacity] = {0}; // ring buffer
+   Vector2 recentBallPositions[numballs][histcapacity]; // ring buffer
    int curidx = 0;
    int histsize = 0;
 
@@ -96,7 +94,7 @@ int main(void)
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
-      TracyCFrameMark;
+      FrameMark;
       f64 t_framestart = GetTime();
       PollInputEvents();
 
@@ -120,7 +118,8 @@ int main(void)
       DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
 
       Vector2 ballPositions[numballs];
-      { TracyCZoneN(julia, "julia", true);
+
+      { ZoneScopedN("julia");
 
       jl_value_t *matrix_2xN_ballpositions = jl_call3(
             solve_autonomous, (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
@@ -135,8 +134,6 @@ int main(void)
          ballPositions[i].y = (f32)xtData[2*i + 1];
       }
       JL_GC_POP();
-
-      TracyCZoneEnd(julia);
       }
 
       for (int n = 0; n < numballs; n++)
@@ -144,8 +141,7 @@ int main(void)
          recentBallPositions[n][curidx] = coords2pixels(ballPositions[n]);
       }
 
-      { TracyCZoneN(drawballs, "draw balls", true);
-
+      { ZoneScopedN("draw balls");
       for (int n = 0; n < numballs; n++)
       {
          for (int i = 0; i < histsize; i++)
@@ -157,11 +153,9 @@ int main(void)
             DrawCircleV(recentBallPositions[n][j], radius, MAROON);
          }
       }
-
-      TracyCZoneEnd(drawballs);
       }
 
-      { TracyCZoneN(postiter, "Post-iteration work", true);
+      { ZoneScopedN("Post-iteration work");
 
       resetwasclicked = GuiButton((Rectangle){ 25, 100, 100, 30 }, "reset");
       if (resetwasclicked)
@@ -188,30 +182,22 @@ int main(void)
          curidx = (curidx+1) % histcapacity;
          histsize = min(histcapacity, histsize + 1);
          t += 0.02;
-
          pausewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "pause");
          if (pausewasclicked)
             paused = true;
       }
 
       EndDrawing();
-
       SwapScreenBuffer();
+      }
 
       f64 t_frameend = GetTime();
       f64 period = t_frameend - t_framestart;
       prevframetime_ms = period * 1000;
       WaitTime(max(0, targetperiod - period));
-
-      TracyCZoneEnd(postiter);
-      }
    }
 
    CloseWindow();
    jl_atexit_hook(0);
    return 0;
 }
-
-#ifdef __cplusplus
-} // extern C
-#endif

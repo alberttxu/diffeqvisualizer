@@ -101,7 +101,7 @@ elif [ $1 = "profile" ]; then
    CFLAGS="$CFLAGS -O3 -D TRACY_ENABLE -march=native"
    LIBS="$LIBS dependencies/TracyClient.o"
 elif [ $1 = "tests" ]; then
-   $CC $CFLAGS $WARNINGS $INCLUDES -o tests source_code/tests.c $LIBS
+   $CC $CFLAGS $WARNINGS $INCLUDES -o tests source_code/tests.cpp $LIBS
    exit
 else
    echo "unrecognized build config: '$1'"
@@ -110,4 +110,4 @@ fi
 
 set -xe
 
-$CC $CFLAGS $WARNINGS $INCLUDES -o main source_code/main.c $LIBS
+$CC $CFLAGS $WARNINGS $INCLUDES -o main source_code/main.cpp $LIBS
