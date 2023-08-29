@@ -33,6 +33,8 @@ extern "C" {
 #define screenwidth 814
 #define screenheight 500
 #define pixelsperunit 100
+#define targetfps 61
+#define targetperiod (1.0/(f64)targetfps)
 
 // 0,0 = center of screen
 // +y = up
@@ -50,7 +52,6 @@ Vector2 coords2pixels(Vector2 graph_coords)
 int main(void)
 {
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
-   SetTargetFPS(62);
 
 #define numballs 30
 #define histcapacity 20
@@ -91,31 +92,32 @@ int main(void)
    bool pausewasclicked = false;
    bool resumewasclicked = false;
 
-   rlImGuiSetup(true);
-   // igCreateContext(NULL);
-   ImGuiIO *io = igGetIO();
+   /* rlImGuiSetup(true); */
+   /* ImGuiIO *io = igGetIO(); */
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
+      TracyCFrameMark;
+      f64 t_framestart = GetTime();
+      PollInputEvents();
+
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
 
-      TracyCFrameMark;
-      f64 t_framestart = GetTime();
       BeginDrawing();
-      rlImGuiBegin();
 
-      // igBegin("mainwindow", NULL, ImGuiWindowFlags_NoTitleBar);
-      // static float f = 0.0f;
-      // igText("Hello World!");
-      // igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", 0);
-      // igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0 / io->Framerate, (f64) io->Framerate);
-      // igEnd();
+      /* rlImGuiBegin(); */
+      /* igBegin("mainwindow", NULL, 0); */
+      /* static float f = 0.0f; */
+      /* igText("Hello World!"); */
+      /* igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", 0); */
+      /* igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0 / io->Framerate, (f64) io->Framerate); */
+      /* igEnd(); */
+      /* rlImGuiEnd(); */
 
       ClearBackground(RAYWHITE);
-      DrawFPS(10, 10);
-      DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
       DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
+      DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
 
       Vector2 ballPositions[numballs];
       { TracyCZoneN(julia, "julia", true);
@@ -192,14 +194,17 @@ int main(void)
             paused = true;
       }
 
+      EndDrawing();
+
+      SwapScreenBuffer();
+
       f64 t_frameend = GetTime();
-      prevframetime_ms = (t_frameend - t_framestart) * 1000;
+      f64 period = t_frameend - t_framestart;
+      prevframetime_ms = period * 1000;
+      WaitTime(max(0, targetperiod - period));
 
       TracyCZoneEnd(postiter);
       }
-
-      rlImGuiEnd();
-      EndDrawing(); // raylib will wait until next frame
    }
 
    CloseWindow();

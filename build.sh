@@ -39,7 +39,6 @@ elif [ $OS = Darwin ]; then
    -L/opt/local/lib \
    -ljulia \
    -Wl,-rpath,/opt/local/lib \
-   -lraylib \
    dependencies/rlImGui/_bin/Debug/librlImGui.a \
    -lc++
    dependencies/cimgui/cimgui.o \
@@ -47,7 +46,12 @@ elif [ $OS = Darwin ]; then
    dependencies/cimgui/imgui/imgui_draw.o \
    dependencies/cimgui/imgui/imgui_tables.o \
    dependencies/cimgui/imgui/imgui_widgets.o \
+   dependencies/raylib/src/libraylib.a \
+   -framework Cocoa -framework OpenGL -framework IOKit \
    "
+
+   # -lraylib \
+
    # Statically linking raylib works, but is slower by 0.3 seconds.
    # LIBS="\
    # dependencies/raylib/src/libraylib.a \
@@ -58,7 +62,8 @@ fi
 build_raylib()
 {
    cd dependencies/raylib/src \
-   && make PLATFORM=PLATFORM_DESKTOP
+   && make clean \
+   && make PLATFORM=PLATFORM_DESKTOP CUSTOM_CFLAGS="-D SUPPORT_CUSTOM_FRAME_CONTROL"
 }
 
 build_tracyserver()

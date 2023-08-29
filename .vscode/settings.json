@@ -1,0 +1,9 @@
+{
+   "files.associations": {
+      "raylib.h": "c",
+      "tracyc.h": "c",
+      "stdbool.h": "c",
+      "julia.h": "c",
+      "rlimgui.h": "c"
+   }
+}
