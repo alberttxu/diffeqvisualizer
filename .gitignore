@@ -3,3 +3,4 @@ main
 tests
 dependencies/TracyClient.o
 imgui.ini
+.cache/

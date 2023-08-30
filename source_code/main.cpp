@@ -1,18 +1,15 @@
+// standard library
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
 
+// third-party libraries
 #include <raylib.h>
 #include <julia.h>
-
-#include "useful_utils.cpp"
-#include "julia_helpers.cpp"
+#include "../dependencies/imgui/imgui.h"
 #include "../dependencies/rlImGui/rlImGui.h"
-
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS 1
-#include "../dependencies/cimgui/cimgui.h"
 
 #define RAYGUI_IMPLEMENTATION
 #pragma GCC diagnostic push
@@ -27,6 +24,10 @@
 #pragma GCC diagnostic pop
 
 #include "../dependencies/tracy/public/tracy/Tracy.hpp"
+
+// our code
+#include "useful_utils.cpp"
+#include "julia_helpers.cpp"
 
 #define screenwidth 814
 #define screenheight 500
@@ -50,6 +51,8 @@ Vector2 coords2pixels(Vector2 graph_coords)
 int main(void)
 {
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
+   SetTargetFPS(targetfps);
+   rlImGuiSetup(true);
 
 #define numballs 30
 #define histcapacity 20
@@ -90,8 +93,6 @@ int main(void)
    bool pausewasclicked = false;
    bool resumewasclicked = false;
 
-   // rlImGuiSetup(true);
-
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       FrameMark;
@@ -103,17 +104,13 @@ int main(void)
 
       BeginDrawing();
 
-      // rlImGuiBegin();
-      // igBegin("mainwindow", NULL, 0);
-      // ImGuiIO *io = igGetIO();
-      // static float f = 0.0f;
-      // igText("Hello World!");
-      // igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", 0);
-      // igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0 / io->Framerate, (f64) io->Framerate);
-      // igEnd();
-      // rlImGuiEnd();
-
       ClearBackground(RAYWHITE);
+
+      rlImGuiBegin();
+      bool open = true;
+      ImGui::ShowDemoWindow(&open);
+      rlImGuiEnd();
+
       DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
       DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
 
@@ -187,16 +184,17 @@ int main(void)
             paused = true;
       }
 
-      EndDrawing();
-      SwapScreenBuffer();
+      /* SwapScreenBuffer(); */
       }
+      EndDrawing();
 
-      f64 t_frameend = GetTime();
-      f64 period = t_frameend - t_framestart;
-      prevframetime_ms = period * 1000;
-      WaitTime(max(0, targetperiod - period));
+      /* f64 t_frameend = GetTime(); */
+      /* f64 period = t_frameend - t_framestart; */
+      /* prevframetime_ms = period * 1000; */
+      /* WaitTime(max(0, targetperiod - period)); */
    }
 
+   rlImGuiShutdown();
    CloseWindow();
    jl_atexit_hook(0);
    return 0;

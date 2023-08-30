@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <raylib.h>
+#include "../dependencies/imgui/imgui.h"
+#include "../dependencies/rlImGui/rlImGui.h"
+
 #include "useful_utils.cpp"
 #include "julia_helpers.cpp"
 
@@ -112,8 +116,48 @@ int test_julia(void)
    return 0;
 }
 
+void test_raylib_imgui(void)
+{
+	// Initialization
+	//--------------------------------------------------------------------------------------
+	int screenWidth = 1280;
+	int screenHeight = 800;
+
+	SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT);
+	InitWindow(screenWidth, screenHeight, "raylib-Extras [ImGui] example - simple ImGui Demo");
+   SetTargetFPS(144);
+	rlImGuiSetup(true);
+
+	// Main game loop
+	while (!WindowShouldClose())    // Detect window close button or ESC key
+	{
+		BeginDrawing();
+		ClearBackground(DARKGRAY);
+
+		// start ImGui Conent
+		rlImGuiBegin();
+
+		// show ImGui Content
+		bool open = true;
+		ImGui::ShowDemoWindow(&open);
+
+		// end ImGui Content
+		rlImGuiEnd();
+
+		EndDrawing();
+		//----------------------------------------------------------------------------------
+	}
+	rlImGuiShutdown();
+
+	// De-Initialization
+	//--------------------------------------------------------------------------------------
+	CloseWindow();        // Close window and OpenGL context
+	//--------------------------------------------------------------------------------------
+}
+
 int main(void)
 {
-   test_julia();
+   /* test_julia(); */
+   test_raylib_imgui();
    return 0;
 }
