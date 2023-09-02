@@ -83,7 +83,7 @@ int main(void)
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       FrameMark;
-      /* f64 t_framestart = GetTime(); */
+      f64 t_framestart = GetTime();
       PollInputEvents();
 
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
@@ -173,12 +173,11 @@ int main(void)
       rlImGuiEnd();
       }
 
-      EndDrawing();
+      f64 t_frameend = GetTime();
+      f64 period = t_frameend - t_framestart;
+      prevframetime_ms = period * 1000;
 
-      /* f64 t_frameend = GetTime(); */
-      /* f64 period = t_frameend - t_framestart; */
-      /* prevframetime_ms = period * 1000; */
-      /* WaitTime(max(0, targetperiod - period)); */
+      EndDrawing();
    }
 
    rlImGuiShutdown();
