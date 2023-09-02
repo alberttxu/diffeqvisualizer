@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <math.h>
 
 // third-party libraries
@@ -64,10 +65,10 @@ int main(void)
    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
    jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
    f64 *AData = (f64 *) jl_array_data(A);
-   AData[0] = 0.6483820385272346;
-   AData[1] = -1.8086122374496931;
-   AData[2] = 0.9185619253668453;
-   AData[3] = -0.7559322222668067;
+   AData[0] = -0.97;
+   AData[1] = 0;
+   AData[2] = 25;
+   AData[3] = -0.3;
 
    JL_GC_PUSH2(&x, &A);
 
@@ -80,11 +81,13 @@ int main(void)
    bool pausewasclicked = false;
    bool resumewasclicked = false;
 
+   f64 newAData[4];
+   memcpy(newAData, AData, 4 * sizeof(newAData[0]));
+
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       FrameMark;
       f64 t_framestart = GetTime();
-      PollInputEvents();
 
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
@@ -137,8 +140,8 @@ int main(void)
       { ZoneScopedN("Post-iteration work");
 
       rlImGuiBegin();
-      ImGui::Begin("Controls");
 
+      ImGui::Begin("Controls");
       resetwasclicked = ImGui::Button("reset");
       if (resetwasclicked)
       {
@@ -150,6 +153,7 @@ int main(void)
             xData[2*i + 0] = randfloat64(-5, 5);
             xData[2*i + 1] = randfloat64(-5, 5);
          }
+         memcpy(AData, newAData, 4 * sizeof(newAData[0]));
       }
 
       if (paused)
@@ -168,8 +172,15 @@ int main(void)
          if (pausewasclicked)
             paused = true;
       }
-
       ImGui::End();
+
+      ImGui::Begin("Matrix");
+      ImGui::InputDouble("A11", &newAData[0]);
+      ImGui::InputDouble("A21", &newAData[1]);
+      ImGui::InputDouble("A12", &newAData[2]);
+      ImGui::InputDouble("A22", &newAData[3]);
+      ImGui::End();
+
       rlImGuiEnd();
       }
 
