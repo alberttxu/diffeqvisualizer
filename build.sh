@@ -38,7 +38,7 @@ elif [ $OS = Darwin ]; then
    LIBS="\
    -L/opt/local/lib \
    -ljulia -Wl,-rpath,/opt/local/lib \
-   dependencies/raylib/src/libraylib.a -framework Cocoa -framework OpenGL -framework IOKit \
+   -lraylib
    dependencies/rlImGui/rlImGui.o \
    dependencies/imgui/imgui.o \
    dependencies/imgui/imgui_draw.o \
@@ -46,6 +46,7 @@ elif [ $OS = Darwin ]; then
    dependencies/imgui/imgui_widgets.o \
    dependencies/imgui/imgui_demo.o \
    "
+   # dependencies/raylib/src/libraylib.a -framework Cocoa -framework OpenGL -framework IOKit \
 fi
 
 build_raylib()

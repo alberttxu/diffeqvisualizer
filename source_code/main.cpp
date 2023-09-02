@@ -29,8 +29,8 @@
 #include "useful_utils.cpp"
 #include "julia_helpers.cpp"
 
-#define screenwidth 814
-#define screenheight 500
+#define screenwidth 1618
+#define screenheight 1000
 #define pixelsperunit 100
 #define targetfps 62
 #define targetperiod (1.0/(f64)targetfps)
@@ -96,7 +96,7 @@ int main(void)
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       FrameMark;
-      f64 t_framestart = GetTime();
+      /* f64 t_framestart = GetTime(); */
       PollInputEvents();
 
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
@@ -105,11 +105,6 @@ int main(void)
       BeginDrawing();
 
       ClearBackground(RAYWHITE);
-
-      rlImGuiBegin();
-      bool open = true;
-      ImGui::ShowDemoWindow(&open);
-      rlImGuiEnd();
 
       DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
       DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
@@ -154,7 +149,10 @@ int main(void)
 
       { ZoneScopedN("Post-iteration work");
 
-      resetwasclicked = GuiButton((Rectangle){ 25, 100, 100, 30 }, "reset");
+      rlImGuiBegin();
+      ImGui::Begin("Controls");
+
+      resetwasclicked = ImGui::Button("reset");
       if (resetwasclicked)
       {
          t = 0;
@@ -170,7 +168,7 @@ int main(void)
       if (paused)
       {
          DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
-         resumewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "resume");
+         resumewasclicked = ImGui::Button("resume");
          if (resumewasclicked)
             paused = false;
       }
@@ -179,13 +177,15 @@ int main(void)
          curidx = (curidx+1) % histcapacity;
          histsize = min(histcapacity, histsize + 1);
          t += 0.02;
-         pausewasclicked = GuiButton((Rectangle){ 25, 130, 100, 30 }, "pause");
+         pausewasclicked = ImGui::Button("pause");
          if (pausewasclicked)
             paused = true;
       }
 
-      /* SwapScreenBuffer(); */
+      ImGui::End();
+      rlImGuiEnd();
       }
+
       EndDrawing();
 
       /* f64 t_frameend = GetTime(); */
