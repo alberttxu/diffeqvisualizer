@@ -8,21 +8,8 @@
 // third-party libraries
 #include <raylib.h>
 #include <julia.h>
-#include "../dependencies/imgui/imgui.h"
 #include "../dependencies/rlImGui/rlImGui.h"
-
-#define RAYGUI_IMPLEMENTATION
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#pragma GCC diagnostic ignored "-Wfloat-conversion"
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#include "../dependencies/raygui/src/raygui.h"
-#pragma GCC diagnostic pop
-
+#include "../dependencies/imgui/imgui.h"
 #include "../dependencies/tracy/public/tracy/Tracy.hpp"
 
 // our code
