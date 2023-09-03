@@ -113,7 +113,7 @@ int main(void)
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
 
-      pixelsperunit += (int) GetMouseWheelMove();
+      pixelsperunit = (int) (powf(1.05f, GetMouseWheelMove()) * pixelsperunit);
       pixelsperunit = clampint(pixelsperunit, 20, 1000);
 
       BeginDrawing();
@@ -147,7 +147,7 @@ int main(void)
 
       for (int n = 0; n < numballs; n++)
       {
-         recentBallPositions[n][curidx] = coords2pixels(ballPositions[n]);
+         recentBallPositions[n][curidx] = ballPositions[n];
       }
 
       { ZoneScopedN("draw balls");
@@ -159,7 +159,7 @@ int main(void)
             int j = curidx - i;
             if (j < 0)
                j += histcapacity;
-            DrawCircleV(recentBallPositions[n][j], radius, MAROON);
+            DrawCircleV(coords2pixels(recentBallPositions[n][j]), radius, MAROON);
          }
       }
       }
