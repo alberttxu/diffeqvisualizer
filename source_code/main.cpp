@@ -19,9 +19,11 @@
 
 #define screenwidth 1618
 #define screenheight 1000
-#define pixelsperunit 100
 #define targetfps 62
 #define targetperiod (1.0/(f64)targetfps)
+
+// zoom level
+int pixelsperunit = 100;
 
 // 0,0 = center of screen
 // +y = up
@@ -34,6 +36,25 @@ Vector2 coords2pixels(Vector2 graph_coords)
       -graph_coords.y * pixelsperunit + screenheight / 2
    };
    return pixel_coords;
+}
+
+static inline
+void drawcoordaxes()
+{
+   int x0 = screenwidth/2;
+   int y0 = screenheight/2;
+   DrawLine(0, y0, screenwidth-1, y0, BLACK);
+   DrawLine(x0, 0, x0, screenheight-1, BLACK);
+
+   int ticklen = 5;
+   for (int x = x0; x < screenwidth; x += pixelsperunit)
+      DrawLine(x, y0 + ticklen, x, y0 - ticklen, BLACK);
+   for (int x = x0; x >= 0; x -= pixelsperunit)
+      DrawLine(x, y0 + ticklen, x, y0 - ticklen, BLACK);
+   for (int y = y0; y < screenheight; y += pixelsperunit)
+      DrawLine(x0 - ticklen, y, x0 + ticklen, y, BLACK);
+   for (int y = y0; y >= 0; y -= pixelsperunit)
+      DrawLine(x0 - ticklen, y, x0 + ticklen, y, BLACK);
 }
 
 int main(void)
@@ -92,12 +113,18 @@ int main(void)
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
 
+      pixelsperunit += (int) GetMouseWheelMove();
+      pixelsperunit = clampint(pixelsperunit, 20, 1000);
+
       BeginDrawing();
 
       ClearBackground(RAYWHITE);
 
+      drawcoordaxes();
+
       DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
       DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
+      DrawText(TextFormat("pixelsperunit = %d", pixelsperunit), 10, 70, 20, DARKGRAY);
 
       Vector2 ballPositions[numballs];
 
