@@ -187,7 +187,7 @@ int main(void)
       {
          DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
          resumewasclicked = ImGui::Button("resume");
-         if (resumewasclicked)
+         if (resumewasclicked || IsKeyPressed(KEY_SPACE))
             paused = false;
       }
       else
@@ -196,7 +196,7 @@ int main(void)
          histsize = min(histcapacity, histsize + 1);
          t += 0.02;
          pausewasclicked = ImGui::Button("pause");
-         if (pausewasclicked)
+         if (pausewasclicked || IsKeyPressed(KEY_SPACE))
             paused = true;
       }
       ImGui::End();

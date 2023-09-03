@@ -44,7 +44,6 @@ elif [ $OS = Darwin ]; then
    dependencies/imgui/imgui_draw.o \
    dependencies/imgui/imgui_tables.o \
    dependencies/imgui/imgui_widgets.o \
-   dependencies/imgui/imgui_demo.o \
    "
    # dependencies/raylib/src/libraylib.a -framework Cocoa -framework OpenGL -framework IOKit \
 fi
