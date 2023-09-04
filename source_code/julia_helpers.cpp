@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 #include <julia.h>
 
@@ -55,26 +56,42 @@ jl_value_t *call(jl_function_t *f, void *arg1, void *arg2)
    return result;
 }
 
+struct ComplexF64
+{
+   f64 rl;
+   f64 im;
+};
+
+void printComplexF64(ComplexF64 x)
+{
+   printf("%f ", x.rl);
+   if (x.im > 0)
+      printf("+");
+   else
+      printf("-");
+   printf(" %fi", fabs(x.im));
+}
+
 struct Eigen
 {
-   f64 values[2];
-   f64 vectors[2][2];
+   ComplexF64 values[2];
+   ComplexF64 vectors[2][2];
 };
 
 Eigen decomposition(jl_array_t *A)
 {
    Eigen result;
-   jl_function_t *eigen = getfunc("eigen");
+   jl_function_t *eigen = getfunc("eigen_ComplexF64");
    jl_function_t *getfield = getfunc("getfield");
 
    jl_value_t *EigenObj = call(eigen, A);
    jl_array_t *eigenvalues = (jl_array_t *) call(getfield, EigenObj, jl_symbol("values"));
    jl_array_t *eigenvectors = (jl_array_t *) call(getfield, EigenObj, jl_symbol("vectors"));
 
-   f64 *eigenvaluesData = (f64 *) jl_array_data(eigenvalues);
-   f64 *eigenvectorsData = (f64 *) jl_array_data(eigenvectors);
+   ComplexF64 *eigenvaluesData = (ComplexF64 *) jl_array_data(eigenvalues);
+   ComplexF64 *eigenvectorsData = (ComplexF64 *) jl_array_data(eigenvectors);
 
-   memcpy(&result.values, eigenvaluesData, 2 * sizeof(f64));
-   memcpy(&result.vectors, eigenvectorsData, 4 * sizeof(f64));
+   memcpy(&result.values, eigenvaluesData, 2 * sizeof(ComplexF64));
+   memcpy(&result.vectors, eigenvectorsData, 4 * sizeof(ComplexF64));
    return result;
 }

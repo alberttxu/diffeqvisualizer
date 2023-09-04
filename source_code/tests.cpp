@@ -117,15 +117,32 @@ int test_julia(void)
       jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
       jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
       f64 *AData = (f64 *) jl_array_data(A);
-      AData[0] = 1.0;
-      AData[1] = 0.0;
-      AData[2] = 0.0;
-      AData[3] = 2.0;
+      // column-major order
+      AData[0] = 0.804694;
+      AData[1] = -0.737554;
+      AData[2] = 0.419185;
+      AData[3] = 0.726183;
 
       Eigen eigen = decomposition(A);
-      printf("A = [%f %f; %f %f]\n", AData[0], AData[1], AData[2], AData[3]);
-      printf("eigenvalues: %f, %f\n", eigen.values[0], eigen.values[1]);
-      printf("eigenvectors: [%f,%f], [%f,%f]\n", eigen.vectors[0][0], eigen.vectors[0][1], eigen.vectors[1][0], eigen.vectors[1][1]);
+      printf("A = [%f %f; %f %f]\n", AData[0], AData[2], AData[1], AData[3]);
+      printf("eigenvalues: ");
+         printComplexF64(eigen.values[0]);
+         printf(", ");
+         printComplexF64(eigen.values[1]);
+         printf("\n");
+      printf("eigenvectors: ");
+         printf("[");
+         printComplexF64(eigen.vectors[0][0]);
+         printf(", ");
+         printComplexF64(eigen.vectors[0][1]);
+         printf("]");
+         printf(", ");
+         printf("[");
+         printComplexF64(eigen.vectors[1][0]);
+         printf(", ");
+         printComplexF64(eigen.vectors[1][1]);
+         printf("]");
+         printf("\n");
    }
 
    jl_atexit_hook(0);
