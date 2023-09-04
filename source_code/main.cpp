@@ -47,14 +47,30 @@ void drawcoordaxes()
    DrawLine(x0, 0, x0, screenheight-1, BLACK);
 
    int ticklen = 5;
-   for (int x = x0; x < screenwidth; x += pixelsperunit)
+   for (int x = x0, xval = 0; x < screenwidth; x += pixelsperunit, xval += 1)
+   {
       DrawLine(x, y0 + ticklen, x, y0 - ticklen, BLACK);
-   for (int x = x0; x >= 0; x -= pixelsperunit)
+      if (xval != 0 && xval % 10 == 0)
+         DrawText(TextFormat("%d", xval), x - 10, y0 + ticklen + 10, 20, DARKGRAY);
+   }
+   for (int x = x0, xval = 0; x >= 0; x -= pixelsperunit, xval -= 1)
+   {
       DrawLine(x, y0 + ticklen, x, y0 - ticklen, BLACK);
-   for (int y = y0; y < screenheight; y += pixelsperunit)
+      if (xval != 0 && xval % 10 == 0)
+         DrawText(TextFormat("%d", xval), x - 15, y0 + ticklen + 10, 20, DARKGRAY);
+   }
+   for (int y = y0, yval = 0; y < screenheight; y += pixelsperunit, yval -= 1)
+   {
       DrawLine(x0 - ticklen, y, x0 + ticklen, y, BLACK);
-   for (int y = y0; y >= 0; y -= pixelsperunit)
+      if (yval != 0 && yval % 10 == 0)
+         DrawText(TextFormat("%d", yval), x0 + ticklen + 15, y - 10, 20, DARKGRAY);
+   }
+   for (int y = y0, yval = 0; y >= 0; y -= pixelsperunit, yval += 1)
+   {
       DrawLine(x0 - ticklen, y, x0 + ticklen, y, BLACK);
+      if (yval != 0 && yval % 10 == 0)
+         DrawText(TextFormat("%d", yval), x0 + ticklen + 15, y - 10, 20, DARKGRAY);
+   }
 }
 
 int main(void)
