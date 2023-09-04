@@ -14,7 +14,7 @@ g_ptr g = NULL;
 int test_julia(void)
 {
    jl_init();
-   eval("include(\"source_code/compute.jl\")");
+   eval("include(\"source_code/tests.jl\")");
 
    {
       puts("===========================");
@@ -157,7 +157,7 @@ void test_raylib_imgui(void)
 
 int main(void)
 {
-   /* test_julia(); */
+   test_julia();
    test_raylib_imgui();
    return 0;
 }

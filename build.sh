@@ -116,6 +116,7 @@ elif [ $1 = "profile" ]; then
    LIBS="$LIBS dependencies/TracyClient.o"
 elif [ $1 = "tests" ]; then
    set -xe
+   LIBS="$LIBS dependencies/imgui/imgui_demo.o"
    $CC $CFLAGS $WARNINGS $INCLUDES -o tests source_code/tests.cpp $LIBS
    exit
 else
