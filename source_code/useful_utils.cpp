@@ -34,6 +34,7 @@ typedef int64_t i64;
 typedef float f32;
 typedef double f64;
 
+static inline
 void swapint(int *a, int *b)
 {
    int temp = *a;
@@ -41,6 +42,7 @@ void swapint(int *a, int *b)
    *b = temp;
 }
 
+static inline
 void swapfloat(float *a, float *b)
 {
    float temp = *a;
@@ -49,21 +51,25 @@ void swapfloat(float *a, float *b)
 }
 
 // https://stackoverflow.com/a/16659263/5150450
-// double clamp(double d, double min, double max) {
-//    const double t = d < min ? min : d;
-//    return t > max ? max : t;
-// }
+static inline
+double clampdouble(double d, double min, double max) {
+   const double t = d < min ? min : d;
+   return t > max ? max : t;
+}
 
+static inline
 float clampfloat(float x, float l, float r) {
    const float t = x < l ? l : x;
    return t > r ? r : t;
 }
 
+static inline
 int clampint(int x, int l, int r) {
    const int t = x < l ? l : x;
    return t > r ? r : t;
 }
 
+static inline
 float average(float *arr, int n)
 {
    if (n == 0)
@@ -76,17 +82,20 @@ float average(float *arr, int n)
    return avg;
 }
 
+static inline
 bool inarraybounds(void *ptr, void *low, void *high)
 {
    return ptr >= low && ptr < high;
 }
 
+static inline
 bool isapprox(f64 a, f64 b)
 {
    f64 tol = 1e-5;
    return fabs(a - b) <= tol;
 }
 
+static inline
 f64 randfloat64(f64 minval, f64 maxval)
 {
    return (f64)rand() / (f64)(RAND_MAX) * (maxval - minval) + minval;

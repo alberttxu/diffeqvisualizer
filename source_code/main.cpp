@@ -73,14 +73,26 @@ void drawcoordaxes()
    }
 }
 
+#define numballs 50
+
+static inline
+void resetballs(f64 *arr_2xN)
+{
+   f64 boxlim = 20;
+   for (int i = 0; i < numballs; i += 1)
+   {
+      arr_2xN[2*i + 0] = randfloat64(-boxlim, boxlim);
+      arr_2xN[2*i + 1] = randfloat64(-boxlim, boxlim);
+   }
+}
+
 int main(void)
 {
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
    SetTargetFPS(targetfps);
    rlImGuiSetup(true);
 
-#define numballs 30
-#define histcapacity 20
+#define histcapacity 16
    Vector2 recentBallPositions[numballs][histcapacity]; // ring buffer
    int curidx = 0;
    int histsize = 0;
@@ -93,11 +105,7 @@ int main(void)
    jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
    jl_array_t *x = jl_alloc_array_2d(array_type, 2, numballs);
    f64 *xData = (f64 *) jl_array_data(x);
-   for (int i = 0; i < numballs; i += 1)
-   {
-      xData[2*i + 0] = randfloat64(-5, 5);
-      xData[2*i + 1] = randfloat64(-5, 5);
-   }
+   resetballs(xData);
 
    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
    jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
@@ -109,8 +117,7 @@ int main(void)
 
    JL_GC_PUSH2(&x, &A);
 
-   jl_function_t *solve_autonomous = jl_get_function(jl_main_module, "solve_autonomous");
-   check_if_julia_exception_occurred();
+   jl_function_t *solve_autonomous = getfunc("solve_autonomous");
 
    f64 prevframetime_ms = 0;
    bool paused = false;
@@ -146,10 +153,8 @@ int main(void)
 
       { ZoneScopedN("julia");
 
-      jl_value_t *matrix_2xN_ballpositions = jl_call3(
-            solve_autonomous, (jl_value_t *)x, (jl_value_t *)A, jl_box_float64(t));
+      jl_value_t *matrix_2xN_ballpositions = call(solve_autonomous, x, A, jl_box_float64(t));
       JL_GC_PUSH1(&matrix_2xN_ballpositions);
-      check_if_julia_exception_occurred();
 
       jl_array_t *xt = (jl_array_t *)matrix_2xN_ballpositions;
       f64 *xtData = (f64 *)jl_array_data(xt);
@@ -191,12 +196,8 @@ int main(void)
          t = 0;
          histsize = 0;
 
-         for (int i = 0; i < numballs; i += 1)
-         {
-            xData[2*i + 0] = randfloat64(-5, 5);
-            xData[2*i + 1] = randfloat64(-5, 5);
-         }
          memcpy(AData, newAData, 4 * sizeof(newAData[0]));
+         resetballs(xData);
       }
 
       if (paused)
@@ -218,10 +219,33 @@ int main(void)
       ImGui::End();
 
       ImGui::Begin("Matrix");
+
+      ImGui::BeginTable("A", 2);
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
       ImGui::InputDouble("A11", &newAData[0]);
-      ImGui::InputDouble("A21", &newAData[1]);
+      ImGui::TableNextColumn();
       ImGui::InputDouble("A12", &newAData[2]);
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::InputDouble("A21", &newAData[1]);
+      ImGui::TableNextColumn();
       ImGui::InputDouble("A22", &newAData[3]);
+      ImGui::EndTable();
+
+      jl_array_t *tempA = jl_alloc_array_2d(matrix_type, 2, 2);
+      f64 *tempAData = (f64 *) jl_array_data(tempA);
+      memcpy(tempAData, newAData, 4 * sizeof(f64));
+      Eigen eigen = decomposition(tempA);
+
+      ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
+            eigen.values[0].rl, eigen.values[0].im,
+            eigen.values[1].rl, eigen.values[1].im);
+      ImGui::Text("eigenvectors:\n[%f + %f i, %f + %f i]\n[%f + %f i, %f + %f i]",
+            eigen.vectors[0][0].rl, eigen.vectors[0][0].im,
+            eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
+            eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
+            eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
       ImGui::End();
 
       rlImGuiEnd();

@@ -8,6 +8,7 @@
 
 // modified from
 // https://blog.esciencecenter.nl/10-examples-of-embedding-julia-in-c-c-66282477e62c
+static inline
 void check_if_julia_exception_occurred(void)
 {
    jl_value_t *ex = jl_exception_occurred();
@@ -25,6 +26,7 @@ void check_if_julia_exception_occurred(void)
    exit(1);
 }
 
+static inline
 jl_value_t *eval(const char* code)
 {
    jl_value_t *result = jl_eval_string(code);
@@ -56,12 +58,21 @@ jl_value_t *call(jl_function_t *f, void *arg1, void *arg2)
    return result;
 }
 
+static inline
+jl_value_t *call(jl_function_t *f, void *arg1, void *arg2, void *arg3)
+{
+   jl_value_t *result = jl_call3(f, (jl_value_t *)arg1, (jl_value_t *)arg2, (jl_value_t *)arg3);
+   check_if_julia_exception_occurred();
+   return result;
+}
+
 struct ComplexF64
 {
    f64 rl;
    f64 im;
 };
 
+static inline
 void printComplexF64(ComplexF64 x)
 {
    printf("%f ", x.rl);
@@ -78,6 +89,7 @@ struct Eigen
    ComplexF64 vectors[2][2];
 };
 
+static inline
 Eigen decomposition(jl_array_t *A)
 {
    Eigen result;

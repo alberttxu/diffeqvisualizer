@@ -2,7 +2,8 @@
    {
       "directory": "/Users/albertxu/fun/diffeqvisualizer",
       "arguments": [
-         "cc",
+         "c++",
+         "std=c++11",
          "-I/opt/local/include",
          "-o",
          "main",

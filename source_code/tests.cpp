@@ -191,6 +191,6 @@ void test_raylib_imgui(void)
 int main(void)
 {
    test_julia();
-   /* test_raylib_imgui(); */
+   test_raylib_imgui();
    return 0;
 }
