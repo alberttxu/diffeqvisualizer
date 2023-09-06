@@ -39,6 +39,15 @@ Vector2 coords2pixels(Vector2 graph_coords)
 }
 
 static inline
+Vector2 pixels2coords(Vector2 pixel_coords)
+{
+   Vector2 graph_coords = {
+       (pixel_coords.x - screenwidth / 2) / pixelsperunit,
+      -(pixel_coords.y - screenheight / 2) / pixelsperunit,
+   }; return graph_coords;
+}
+
+static inline
 void drawcoordaxes()
 {
    int x0 = screenwidth/2;
@@ -73,7 +82,10 @@ void drawcoordaxes()
    }
 }
 
-#define numballs 50
+/* #define numballs 50 */
+#define maxnumballs 200
+int numballs = 50;
+int numuserballs = 0;
 
 static inline
 void resetballs(f64 *arr_2xN)
@@ -114,17 +126,18 @@ int main(void)
    SetTargetFPS(targetfps);
    rlImGuiSetup(true);
 
-   Queue balls[numballs];
+   Queue balls[maxnumballs];
    for (int i = 0; i < numballs; i++)
       initQueue(&balls[i]);
 
    f64 t = 0;
+#define dt 0.02
 
    jl_init();
    eval("include(\"source_code/compute.jl\")");
 
    jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
-   jl_array_t *x = jl_alloc_array_2d(array_type, 2, numballs);
+   jl_array_t *x = jl_alloc_array_2d(array_type, 2, maxnumballs);
    f64 *xData = (f64 *) jl_array_data(x);
    resetballs(xData);
 
@@ -160,6 +173,16 @@ int main(void)
       pixelsperunit = (int) (powf(1.05f, GetMouseWheelMove()) * pixelsperunit);
       pixelsperunit = clampint(pixelsperunit, 20, 1000);
 
+      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+      {
+         Vector2 newballcoords = pixels2coords(GetMousePosition());
+         int i = numballs + numuserballs;
+         initQueue(&balls[i]);
+         xData[2*i + 0] = newballcoords.x;
+         xData[2*i + 1] = newballcoords.y;
+         numuserballs += 1;
+      }
+
       BeginDrawing();
 
       ClearBackground(RAYWHITE);
@@ -170,31 +193,34 @@ int main(void)
       DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
       DrawText(TextFormat("pixelsperunit = %d", pixelsperunit), 10, 70, 20, DARKGRAY);
 
-      Vector2 ballPositions[numballs];
+      Vector2 ballPositions[numballs + numuserballs];
 
       { ZoneScopedN("julia");
 
-      jl_value_t *matrix_2xN_ballpositions = call(solve_autonomous, x, A, jl_box_float64(t));
+      jl_value_t *matrix_2xN_ballpositions = call(solve_autonomous, x, A, jl_box_float64(dt));
       JL_GC_PUSH1(&matrix_2xN_ballpositions);
 
       jl_array_t *xt = (jl_array_t *)matrix_2xN_ballpositions;
       f64 *xtData = (f64 *)jl_array_data(xt);
-      for (int i = 0; i < numballs; i += 1)
+      for (int i = 0; i < numballs + numuserballs; i += 1)
       {
          ballPositions[i].x = (f32)xtData[2*i + 0];
          ballPositions[i].y = (f32)xtData[2*i + 1];
       }
-      JL_GC_POP();
-      }
 
       if (!paused)
       {
-         for (int i = 0; i < numballs; i++)
+         for (int i = 0; i < numballs + numuserballs; i++)
             updateposition(&balls[i], ballPositions[i]);
+
+         memcpy(xData, xtData, (numballs + numuserballs) * 2 * sizeof(f64));
+      }
+
+      JL_GC_POP();
       }
 
       { ZoneScopedN("draw balls");
-      for (int i = 0; i < numballs; i++)
+      for (int i = 0; i < numballs + numuserballs; i++)
       {
          Queue trajectory = balls[i];
          for (int ago = 0; ago < trajectory.size; ago++)
@@ -233,7 +259,7 @@ int main(void)
       }
       else
       {
-         t += 0.02;
+         t += dt;
 
          pausewasclicked = ImGui::Button("pause");
          if (pausewasclicked || IsKeyPressed(KEY_SPACE))
