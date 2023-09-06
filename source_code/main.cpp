@@ -82,8 +82,7 @@ void drawcoordaxes()
    }
 }
 
-#define maxnumtrajectories 200
-int numtrajectories = 50;
+#define numtrajectories 100
 
 static inline
 void resettrajectories(f64 *arr_2xN)
@@ -123,8 +122,9 @@ int main(void)
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
    SetTargetFPS(targetfps);
    rlImGuiSetup(true);
+   ImGuiIO& io = ImGui::GetIO();
 
-   Queue trajectories[maxnumtrajectories];
+   Queue trajectories[numtrajectories];
    int newtrajidx = numtrajectories;
    for (int i = 0; i < numtrajectories; i++)
       initQueue(&trajectories[i]);
@@ -136,18 +136,13 @@ int main(void)
    eval("include(\"source_code/compute.jl\")");
 
    jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
-   jl_array_t *x = jl_alloc_array_2d(array_type, 2, maxnumtrajectories);
+   jl_array_t *x = jl_alloc_array_2d(array_type, 2, numtrajectories);
    f64 *xData = (f64 *) jl_array_data(x);
    resettrajectories(xData);
 
    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
    jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
    f64 *AData = (f64 *) jl_array_data(A);
-   AData[0] = -0.97;
-   AData[1] = 0;
-   AData[2] = 25;
-   AData[3] = -0.3;
-
    JL_GC_PUSH2(&x, &A);
 
    jl_function_t *solve_autonomous = getfunc("solve_autonomous");
@@ -158,10 +153,7 @@ int main(void)
    bool pausewasclicked = false;
    bool resumewasclicked = false;
 
-   f64 newAData[4];
-   memcpy(newAData, AData, 4 * sizeof(newAData[0]));
-
-   ImGuiIO& io = ImGui::GetIO();
+   f32 newAData[4] = {0, 0, 0, 0};
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
@@ -183,8 +175,7 @@ int main(void)
          xData[2*i + 0] = (f64) newtrajectorycoords.x;
          xData[2*i + 1] = (f64) newtrajectorycoords.y;
 
-         newtrajidx = (newtrajidx + 1) % maxnumtrajectories;
-         numtrajectories = min(maxnumtrajectories, numtrajectories + 1);
+         newtrajidx = (newtrajidx + 1) % numtrajectories;
       }
 
       BeginDrawing();
@@ -201,10 +192,10 @@ int main(void)
 
       { ZoneScopedN("julia");
 
-      jl_value_t *matrix_2xN_ballpositions = call(solve_autonomous, x, A, jl_box_float64(dt));
-      JL_GC_PUSH1(&matrix_2xN_ballpositions);
+      jl_value_t *matrix_2xN_states = call(solve_autonomous, x, A, jl_box_float64(dt));
+      JL_GC_PUSH1(&matrix_2xN_states);
 
-      jl_array_t *xt = (jl_array_t *)matrix_2xN_ballpositions;
+      jl_array_t *xt = (jl_array_t *) matrix_2xN_states;
       f64 *xtData = (f64 *)jl_array_data(xt);
       for (int i = 0; i < numtrajectories; i += 1)
       {
@@ -248,7 +239,6 @@ int main(void)
       {
          t = 0;
 
-         memcpy(AData, newAData, 4 * sizeof(newAData[0]));
          resettrajectories(xData);
          for (int i = 0; i < numtrajectories; i++)
             initQueue(&trajectories[i]);
@@ -276,20 +266,19 @@ int main(void)
       ImGui::BeginTable("A", 2);
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
-      ImGui::InputDouble("A11", &newAData[0]);
+      ImGui::SliderFloat("A11", &newAData[0], -20, 20);
       ImGui::TableNextColumn();
-      ImGui::InputDouble("A12", &newAData[2]);
+      ImGui::SliderFloat("A12", &newAData[2], -20, 20);
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
-      ImGui::InputDouble("A21", &newAData[1]);
+      ImGui::SliderFloat("A21", &newAData[1], -20, 20);
       ImGui::TableNextColumn();
-      ImGui::InputDouble("A22", &newAData[3]);
+      ImGui::SliderFloat("A22", &newAData[3], -20, 20);
       ImGui::EndTable();
+      for (int i = 0; i < 4; i += 1)
+         AData[i] = (f64) newAData[i];
 
-      jl_array_t *tempA = jl_alloc_array_2d(matrix_type, 2, 2);
-      f64 *tempAData = (f64 *) jl_array_data(tempA);
-      memcpy(tempAData, newAData, 4 * sizeof(f64));
-      Eigen eigen = decomposition(tempA);
+      Eigen eigen = decomposition(A);
 
       ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
             eigen.values[0].rl, eigen.values[0].im,
