@@ -86,16 +86,37 @@ void resetballs(f64 *arr_2xN)
    }
 }
 
+#define histcapacity 16
+struct Queue
+{
+   Vector2 recentpositions[histcapacity];
+   int curidx;
+   int size;
+};
+
+void initQueue(Queue *q)
+{
+   memset(q->recentpositions, 0, histcapacity * sizeof(q->recentpositions[0]));
+   q->curidx = 0;
+   q->size = 0;
+}
+
+void updateposition(Queue *q, Vector2 position)
+{
+   q->recentpositions[q->curidx] = position;
+   q->curidx = (q->curidx + 1) % histcapacity;
+   q->size = min(histcapacity, q->size + 1);
+}
+
 int main(void)
 {
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
    SetTargetFPS(targetfps);
    rlImGuiSetup(true);
 
-#define histcapacity 16
-   Vector2 recentBallPositions[numballs][histcapacity]; // ring buffer
-   int curidx = 0;
-   int histsize = 0;
+   Queue balls[numballs];
+   for (int i = 0; i < numballs; i++)
+      initQueue(&balls[i]);
 
    f64 t = 0;
 
@@ -166,21 +187,23 @@ int main(void)
       JL_GC_POP();
       }
 
-      for (int n = 0; n < numballs; n++)
+      if (!paused)
       {
-         recentBallPositions[n][curidx] = ballPositions[n];
+         for (int i = 0; i < numballs; i++)
+            updateposition(&balls[i], ballPositions[i]);
       }
 
       { ZoneScopedN("draw balls");
-      for (int n = 0; n < numballs; n++)
+      for (int i = 0; i < numballs; i++)
       {
-         for (int i = 0; i < histsize; i++)
+         Queue trajectory = balls[i];
+         for (int ago = 0; ago < trajectory.size; ago++)
          {
-            f32 radius = 3.0f - 0.1f * i;
-            int j = curidx - i;
+            f32 radius = 3.0f - 0.1f * ago;
+            int j = trajectory.curidx - 1 - ago;
             if (j < 0)
                j += histcapacity;
-            DrawCircleV(coords2pixels(recentBallPositions[n][j]), radius, MAROON);
+            DrawCircleV(coords2pixels(trajectory.recentpositions[j]), radius, MAROON);
          }
       }
       }
@@ -194,10 +217,11 @@ int main(void)
       if (resetwasclicked)
       {
          t = 0;
-         histsize = 0;
 
          memcpy(AData, newAData, 4 * sizeof(newAData[0]));
          resetballs(xData);
+         for (int i = 0; i < numballs; i++)
+            initQueue(&balls[i]);
       }
 
       if (paused)
@@ -209,9 +233,8 @@ int main(void)
       }
       else
       {
-         curidx = (curidx+1) % histcapacity;
-         histsize = min(histcapacity, histsize + 1);
          t += 0.02;
+
          pausewasclicked = ImGui::Button("pause");
          if (pausewasclicked || IsKeyPressed(KEY_SPACE))
             paused = true;
