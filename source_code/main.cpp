@@ -82,16 +82,14 @@ void drawcoordaxes()
    }
 }
 
-/* #define numballs 50 */
-#define maxnumballs 200
-int numballs = 50;
-int numuserballs = 0;
+#define maxnumtrajectories 200
+int numtrajectories = 50;
 
 static inline
-void resetballs(f64 *arr_2xN)
+void resettrajectories(f64 *arr_2xN)
 {
    f64 boxlim = 20;
-   for (int i = 0; i < numballs; i += 1)
+   for (int i = 0; i < numtrajectories; i += 1)
    {
       arr_2xN[2*i + 0] = randfloat64(-boxlim, boxlim);
       arr_2xN[2*i + 1] = randfloat64(-boxlim, boxlim);
@@ -126,9 +124,10 @@ int main(void)
    SetTargetFPS(targetfps);
    rlImGuiSetup(true);
 
-   Queue balls[maxnumballs];
-   for (int i = 0; i < numballs; i++)
-      initQueue(&balls[i]);
+   Queue trajectories[maxnumtrajectories];
+   int newtrajidx = numtrajectories;
+   for (int i = 0; i < numtrajectories; i++)
+      initQueue(&trajectories[i]);
 
    f64 t = 0;
 #define dt 0.02
@@ -137,9 +136,9 @@ int main(void)
    eval("include(\"source_code/compute.jl\")");
 
    jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
-   jl_array_t *x = jl_alloc_array_2d(array_type, 2, maxnumballs);
+   jl_array_t *x = jl_alloc_array_2d(array_type, 2, maxnumtrajectories);
    f64 *xData = (f64 *) jl_array_data(x);
-   resetballs(xData);
+   resettrajectories(xData);
 
    jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
    jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
@@ -162,6 +161,8 @@ int main(void)
    f64 newAData[4];
    memcpy(newAData, AData, 4 * sizeof(newAData[0]));
 
+   ImGuiIO& io = ImGui::GetIO();
+
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
       FrameMark;
@@ -173,14 +174,17 @@ int main(void)
       pixelsperunit = (int) (powf(1.05f, GetMouseWheelMove()) * pixelsperunit);
       pixelsperunit = clampint(pixelsperunit, 20, 1000);
 
-      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+      if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse)
       {
-         Vector2 newballcoords = pixels2coords(GetMousePosition());
-         int i = numballs + numuserballs;
-         initQueue(&balls[i]);
-         xData[2*i + 0] = newballcoords.x;
-         xData[2*i + 1] = newballcoords.y;
-         numuserballs += 1;
+         Vector2 newtrajectorycoords = pixels2coords(GetMousePosition());
+
+         int i = newtrajidx;
+         initQueue(&trajectories[i]);
+         xData[2*i + 0] = (f64) newtrajectorycoords.x;
+         xData[2*i + 1] = (f64) newtrajectorycoords.y;
+
+         newtrajidx = (newtrajidx + 1) % maxnumtrajectories;
+         numtrajectories = min(maxnumtrajectories, numtrajectories + 1);
       }
 
       BeginDrawing();
@@ -193,7 +197,7 @@ int main(void)
       DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
       DrawText(TextFormat("pixelsperunit = %d", pixelsperunit), 10, 70, 20, DARKGRAY);
 
-      Vector2 ballPositions[numballs + numuserballs];
+      Vector2 currentstates[numtrajectories];
 
       { ZoneScopedN("julia");
 
@@ -202,27 +206,27 @@ int main(void)
 
       jl_array_t *xt = (jl_array_t *)matrix_2xN_ballpositions;
       f64 *xtData = (f64 *)jl_array_data(xt);
-      for (int i = 0; i < numballs + numuserballs; i += 1)
+      for (int i = 0; i < numtrajectories; i += 1)
       {
-         ballPositions[i].x = (f32)xtData[2*i + 0];
-         ballPositions[i].y = (f32)xtData[2*i + 1];
+         currentstates[i].x = (f32)xtData[2*i + 0];
+         currentstates[i].y = (f32)xtData[2*i + 1];
       }
 
       if (!paused)
       {
-         for (int i = 0; i < numballs + numuserballs; i++)
-            updateposition(&balls[i], ballPositions[i]);
+         for (int i = 0; i < numtrajectories; i++)
+            updateposition(&trajectories[i], currentstates[i]);
 
-         memcpy(xData, xtData, (numballs + numuserballs) * 2 * sizeof(f64));
+         memcpy(xData, xtData, (numtrajectories) * 2 * sizeof(f64));
       }
 
       JL_GC_POP();
       }
 
-      { ZoneScopedN("draw balls");
-      for (int i = 0; i < numballs + numuserballs; i++)
+      { ZoneScopedN("draw trajectories");
+      for (int i = 0; i < numtrajectories; i++)
       {
-         Queue trajectory = balls[i];
+         Queue trajectory = trajectories[i];
          for (int ago = 0; ago < trajectory.size; ago++)
          {
             f32 radius = 3.0f - 0.1f * ago;
@@ -245,16 +249,16 @@ int main(void)
          t = 0;
 
          memcpy(AData, newAData, 4 * sizeof(newAData[0]));
-         resetballs(xData);
-         for (int i = 0; i < numballs; i++)
-            initQueue(&balls[i]);
+         resettrajectories(xData);
+         for (int i = 0; i < numtrajectories; i++)
+            initQueue(&trajectories[i]);
       }
 
       if (paused)
       {
          DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
          resumewasclicked = ImGui::Button("resume");
-         if (resumewasclicked || IsKeyPressed(KEY_SPACE))
+         if (resumewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
             paused = false;
       }
       else
@@ -262,7 +266,7 @@ int main(void)
          t += dt;
 
          pausewasclicked = ImGui::Button("pause");
-         if (pausewasclicked || IsKeyPressed(KEY_SPACE))
+         if (pausewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
             paused = true;
       }
       ImGui::End();
