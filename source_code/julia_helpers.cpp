@@ -38,8 +38,9 @@ jl_value_t *eval(const char* code)
 static inline
 jl_function_t *getfunc(const char *func)
 {
-   return jl_get_function(jl_main_module, func);
+   jl_function_t *result = jl_get_function(jl_main_module, func);
    check_if_julia_exception_occurred();
+   return result;
 }
 
 static inline
