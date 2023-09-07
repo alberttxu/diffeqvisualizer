@@ -125,7 +125,7 @@ int main(void)
    ImGuiIO& io = ImGui::GetIO();
 
    Queue trajectories[numtrajectories];
-   int newtrajidx = numtrajectories;
+   int newtrajidx = 0;
    for (int i = 0; i < numtrajectories; i++)
       initQueue(&trajectories[i]);
 
@@ -170,11 +170,11 @@ int main(void)
       {
          Vector2 newtrajectorycoords = pixels2coords(GetMousePosition());
 
-         int i = newtrajidx;
-         initQueue(&trajectories[i]);
-         xData[2*i + 0] = (f64) newtrajectorycoords.x;
-         xData[2*i + 1] = (f64) newtrajectorycoords.y;
-
+         initQueue(&trajectories[newtrajidx]);
+         assert(inarraybounds(&xData[2*newtrajidx + 0], xData, &xData[2*numtrajectories]));
+         assert(inarraybounds(&xData[2*newtrajidx + 1], xData, &xData[2*numtrajectories]));
+         xData[2*newtrajidx + 0] = (f64) newtrajectorycoords.x;
+         xData[2*newtrajidx + 1] = (f64) newtrajectorycoords.y;
          newtrajidx = (newtrajidx + 1) % numtrajectories;
       }
 
