@@ -135,15 +135,23 @@ int main(void)
    jl_init();
    eval("include(\"source_code/compute.jl\")");
 
-   jl_value_t *array_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
-   jl_array_t *x = jl_alloc_array_2d(array_type, 2, numtrajectories);
+   jl_value_t *jlVecF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1);
+   jl_value_t *jlMatF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
+
+   jl_array_t *x = jl_alloc_array_2d(jlMatF64type, 2, numtrajectories);
    f64 *xData = (f64 *) jl_array_data(x);
    resettrajectories(xData);
 
-   jl_value_t *matrix_type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
-   jl_array_t *A = jl_alloc_array_2d(matrix_type, 2, 2);
+   jl_array_t *A = jl_alloc_array_2d(jlMatF64type, 2, 2);
    f64 *AData = (f64 *) jl_array_data(A);
-   JL_GC_PUSH2(&x, &A);
+
+   jl_array_t *lambda = jl_alloc_array_1d(jlVecF64type, 2);
+   f64 *lambdaData = (f64 *) jl_array_data(lambda);
+
+   jl_array_t *V = jl_alloc_array_2d(jlMatF64type, 2, 2);
+   f64 *VData = (f64 *) jl_array_data(V);
+
+   JL_GC_PUSH4(&x, &A, &lambda, &V);
 
    jl_function_t *solve_autonomous = getfunc("solve_autonomous");
 
@@ -154,6 +162,8 @@ int main(void)
    bool resumewasclicked = false;
 
    f32 newAData[4] = {0, 0, 0, 0};
+   f32 neweigenvalues[2];
+   f32 neweigenvectors[2][2];
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
@@ -191,10 +201,8 @@ int main(void)
       Vector2 currentstates[numtrajectories];
 
       { ZoneScopedN("julia");
-
       jl_value_t *matrix_2xN_states = call(solve_autonomous, x, A, jl_box_float64(dt));
       JL_GC_PUSH1(&matrix_2xN_states);
-
       jl_array_t *xt = (jl_array_t *) matrix_2xN_states;
       f64 *xtData = (f64 *)jl_array_data(xt);
       for (int i = 0; i < numtrajectories; i += 1)
@@ -202,15 +210,12 @@ int main(void)
          currentstates[i].x = (f32)xtData[2*i + 0];
          currentstates[i].y = (f32)xtData[2*i + 1];
       }
-
       if (!paused)
       {
          for (int i = 0; i < numtrajectories; i++)
             updateposition(&trajectories[i], currentstates[i]);
-
          memcpy(xData, xtData, (numtrajectories) * 2 * sizeof(f64));
       }
-
       JL_GC_POP();
       }
 
@@ -263,22 +268,31 @@ int main(void)
 
       ImGui::Begin("Matrix");
 
+      bool A_was_modified[4] = {false, false, false, false};
+
       ImGui::BeginTable("A", 2);
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
-      ImGui::SliderFloat("A11", &newAData[0], -20, 20);
+      A_was_modified[0] = ImGui::SliderFloat("A11", &newAData[0], -20, 20);
       ImGui::TableNextColumn();
-      ImGui::SliderFloat("A12", &newAData[2], -20, 20);
+      A_was_modified[1] = ImGui::SliderFloat("A12", &newAData[2], -20, 20);
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
-      ImGui::SliderFloat("A21", &newAData[1], -20, 20);
+      A_was_modified[2] = ImGui::SliderFloat("A21", &newAData[1], -20, 20);
       ImGui::TableNextColumn();
-      ImGui::SliderFloat("A22", &newAData[3], -20, 20);
+      A_was_modified[3] = ImGui::SliderFloat("A22", &newAData[3], -20, 20);
       ImGui::EndTable();
-      for (int i = 0; i < 4; i += 1)
-         AData[i] = (f64) newAData[i];
 
-      Eigen eigen = decomposition(A);
+      Eigen eigen;
+      if (A_was_modified[0]
+       || A_was_modified[1]
+       || A_was_modified[2]
+       || A_was_modified[3])
+      {
+         for (int i = 0; i < 4; i += 1)
+            AData[i] = (f64) newAData[i];
+         eigen = decomposition(A);
+      }
 
       ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
             eigen.values[0].rl, eigen.values[0].im,
@@ -288,6 +302,49 @@ int main(void)
             eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
             eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
             eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
+
+      bool eig_was_modified[12] = {
+          false, false, false, false, false, false,
+          false, false, false, false, false, false};
+
+      eig_was_modified[0] = ImGui::SliderFloat("lambda1 real", &neweigenvalues[0], -20, 20);
+      eig_was_modified[1] = ImGui::SliderFloat("lambda1 im", &neweigenvalues[0], -20, 20);
+      eig_was_modified[2] = ImGui::SliderFloat("lambda2 real ", &neweigenvalues[1], -20, 20);
+      eig_was_modified[3] = ImGui::SliderFloat("lambda2 im ", &neweigenvalues[1], -20, 20);
+      eig_was_modified[4] = ImGui::SliderFloat("V11 real", &neweigenvectors[0][0], -20, 20);
+      eig_was_modified[5] = ImGui::SliderFloat("V11 im", &neweigenvectors[0][0], -20, 20);
+      eig_was_modified[6] = ImGui::SliderFloat("V21 real", &neweigenvectors[0][1], -20, 20);
+      eig_was_modified[7] = ImGui::SliderFloat("V21 im", &neweigenvectors[0][1], -20, 20);
+      eig_was_modified[8] = ImGui::SliderFloat("V12 real", &neweigenvectors[1][0], -20, 20);
+      eig_was_modified[9] = ImGui::SliderFloat("V12 im", &neweigenvectors[1][0], -20, 20);
+      eig_was_modified[10] = ImGui::SliderFloat("V22 real", &neweigenvectors[1][1], -20, 20);
+      eig_was_modified[11] = ImGui::SliderFloat("V22 im", &neweigenvectors[1][1], -20, 20);
+
+      bool any_eig_was_modified = false;
+      for (int i = 0; i < 12; i++)
+      {
+         if (eig_was_modified[i])
+         {
+            any_eig_was_modified = true;
+            break;
+         }
+      }
+
+      if (any_eig_was_modified)
+      {
+         /*
+         lambdaData[0] = (f64) neweigenvalues[0];
+         lambdaData[1] = (f64) neweigenvalues[1];
+         VData[0] = (f64) neweigenvectors[0][0];
+         VData[1] = (f64) neweigenvectors[0][1];
+         VData[2] = (f64) neweigenvectors[1][0];
+         VData[3] = (f64) neweigenvectors[1][1];
+         */
+
+         /* jl_function_t *eigencompose = getfunc("eigencompose"); */
+         /* jl_value_t *newA = call(eigencompose, lambda, V); */
+      }
+
       ImGui::End();
 
       rlImGuiEnd();
@@ -300,6 +357,7 @@ int main(void)
       EndDrawing();
    }
 
+   JL_GC_POP();
    rlImGuiShutdown();
    CloseWindow();
    jl_atexit_hook(0);
