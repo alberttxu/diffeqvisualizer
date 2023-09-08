@@ -10,3 +10,11 @@ function eigen_ComplexF64(A::Matrix{Float64})
     F = eigen(A)
     return Eigen(convert.(ComplexF64, F.values), convert.(ComplexF64, F.vectors))
 end
+
+function eigencompose(λ::Vector{Float64}, V::Matrix{Float64})
+    return V * diagm(λ) * inv(V)
+end
+
+# warm start the jit
+solve_autonomous(Float64[0, 0], Float64[0 0; 0 0], 0.0)
+eigen(Float64[1 0; 0 1])
