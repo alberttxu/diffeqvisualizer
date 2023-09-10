@@ -1,0 +1,24 @@
+2023/08/10
+Dear ImGui is rendering incorrectly on my Macbook Pro 2015 Retina 15-inch, but not on my external monitors.
+Looks like high DPI is a common issue in other projects:
+- https://github.com/ocornut/imgui/issues/2816 (similar to what I'm seeing)
+- https://github.com/ocornut/imgui/blob/master/docs/FAQ.md#q-how-should-i-handle-dpi-in-my-application
+- https://github.com/ocornut/imgui/issues/3757
+- https://github.com/raysan5/raylib/discussions/2999
+- https://stackoverflow.com/questions/38359208/sdl-detect-high-dpi-retina-display
+- https://github.com/ocornut/imgui/issues/1676
+- https://github.com/ocornut/imgui/issues/5081
+- https://github.com/ocornut/imgui/issues/1786
+- https://github.com/ocornut/imgui/issues/2956
+- https://github.com/ocornut/imgui/issues/1693
+
+Ideas I'm considering:
+- dig around ImGui and/or raylib+glfw settings
+   - pros: potentially faster to find existing solutions
+   - cons: it's not very good for building a matrix editor
+- write my own UI elements
+   - pros: I need a custom UI anyways for complex eigenvalue/eigenvector input
+      - Blender style drag-to-scale editing with an adaptive scaling rate for poorly conditioned matrices
+      - complex number input editor
+   - cons: takes more time
+
