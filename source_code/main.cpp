@@ -145,13 +145,11 @@ int main(void)
    jl_array_t *A = jl_alloc_array_2d(jlMatF64type, 2, 2);
    f64 *AData = (f64 *) jl_array_data(A);
 
-   jl_array_t *lambda = jl_alloc_array_1d(jlVecF64type, 2);
+   jl_array_t *lambda = jl_alloc_array_1d(jlVecF64type, 4);
    f64 *lambdaData = (f64 *) jl_array_data(lambda);
 
-   jl_array_t *V = jl_alloc_array_2d(jlMatF64type, 2, 2);
-   f64 *VData = (f64 *) jl_array_data(V);
-
-   JL_GC_PUSH4(&x, &A, &lambda, &V);
+   JL_GC_PUSH3(&x, &A, &lambda);
+   /* JL_GC_PUSH2(&x, &A); */
 
    jl_function_t *solve_autonomous = getfunc("solve_autonomous");
 
@@ -162,8 +160,7 @@ int main(void)
    bool resumewasclicked = false;
 
    f32 newAData[4] = {0, 0, 0, 0};
-   f32 neweigenvalues[2];
-   f32 neweigenvectors[2][2];
+   ComplexF32 neweigenvalues[2];
 
    while (!WindowShouldClose())   // Detect window close button or ESC key
    {
@@ -173,7 +170,8 @@ int main(void)
       if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
          break;
 
-      pixelsperunit = (int) (powf(1.05f, GetMouseWheelMove()) * pixelsperunit);
+      if (!io.WantCaptureMouse)
+         pixelsperunit = (int) (powf(1.05f, GetMouseWheelMove()) * pixelsperunit);
       pixelsperunit = clampint(pixelsperunit, 20, 1000);
 
       if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse)
@@ -292,6 +290,10 @@ int main(void)
          for (int i = 0; i < 4; i += 1)
             AData[i] = (f64) newAData[i];
          eigen = decomposition(A);
+         neweigenvalues[0].rl = (f32) eigen.values[0].rl;
+         neweigenvalues[0].im = (f32) eigen.values[0].im;
+         neweigenvalues[1].rl = (f32) eigen.values[1].rl;
+         neweigenvalues[1].im = (f32) eigen.values[1].im;
       }
 
       ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
@@ -303,46 +305,44 @@ int main(void)
             eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
             eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
 
-      bool eig_was_modified[12] = {
-          false, false, false, false, false, false,
-          false, false, false, false, false, false};
-
-      eig_was_modified[0] = ImGui::SliderFloat("lambda1 real", &neweigenvalues[0], -20, 20);
-      eig_was_modified[1] = ImGui::SliderFloat("lambda1 im", &neweigenvalues[0], -20, 20);
-      eig_was_modified[2] = ImGui::SliderFloat("lambda2 real ", &neweigenvalues[1], -20, 20);
-      eig_was_modified[3] = ImGui::SliderFloat("lambda2 im ", &neweigenvalues[1], -20, 20);
-      eig_was_modified[4] = ImGui::SliderFloat("V11 real", &neweigenvectors[0][0], -20, 20);
-      eig_was_modified[5] = ImGui::SliderFloat("V11 im", &neweigenvectors[0][0], -20, 20);
-      eig_was_modified[6] = ImGui::SliderFloat("V21 real", &neweigenvectors[0][1], -20, 20);
-      eig_was_modified[7] = ImGui::SliderFloat("V21 im", &neweigenvectors[0][1], -20, 20);
-      eig_was_modified[8] = ImGui::SliderFloat("V12 real", &neweigenvectors[1][0], -20, 20);
-      eig_was_modified[9] = ImGui::SliderFloat("V12 im", &neweigenvectors[1][0], -20, 20);
-      eig_was_modified[10] = ImGui::SliderFloat("V22 real", &neweigenvectors[1][1], -20, 20);
-      eig_was_modified[11] = ImGui::SliderFloat("V22 im", &neweigenvectors[1][1], -20, 20);
-
       bool any_eig_was_modified = false;
-      for (int i = 0; i < 12; i++)
+      if (ImGui::SliderFloat("lambda1 real", &neweigenvalues[0].rl, -20, 20))
       {
-         if (eig_was_modified[i])
-         {
-            any_eig_was_modified = true;
-            break;
-         }
+         if (!isapprox(neweigenvalues[0].im, 0.0f))
+            neweigenvalues[1].rl = neweigenvalues[0].rl;
+         any_eig_was_modified = true;
+      }
+      if (ImGui::SliderFloat("lambda1 im", &neweigenvalues[0].im, -20, 20))
+      {
+         neweigenvalues[1].im = -1 *  neweigenvalues[0].im;
+         any_eig_was_modified = true;
+      }
+      if (ImGui::SliderFloat("lambda2 real ", &neweigenvalues[1].rl, -20, 20))
+      {
+         if (!isapprox(neweigenvalues[1].im, 0.0f))
+            neweigenvalues[0].rl = neweigenvalues[1].rl;
+         any_eig_was_modified = true;
+      }
+      if (ImGui::SliderFloat("lambda2 im ", &neweigenvalues[1].im, -20, 20))
+      {
+         neweigenvalues[0].im = -1 * neweigenvalues[1].im;
+         any_eig_was_modified = true;
       }
 
       if (any_eig_was_modified)
       {
-         /*
-         lambdaData[0] = (f64) neweigenvalues[0];
-         lambdaData[1] = (f64) neweigenvalues[1];
-         VData[0] = (f64) neweigenvectors[0][0];
-         VData[1] = (f64) neweigenvectors[0][1];
-         VData[2] = (f64) neweigenvectors[1][0];
-         VData[3] = (f64) neweigenvectors[1][1];
-         */
-
-         /* jl_function_t *eigencompose = getfunc("eigencompose"); */
-         /* jl_value_t *newA = call(eigencompose, lambda, V); */
+         lambdaData[0] = (f64) neweigenvalues[0].rl;
+         lambdaData[1] = (f64) neweigenvalues[0].im;
+         lambdaData[2] = (f64) neweigenvalues[1].rl;
+         lambdaData[3] = (f64) neweigenvalues[1].im;
+         jl_function_t *changeEigenvalues = getfunc("changeEigenvalues_wrapper");
+         jl_value_t *newA = call(changeEigenvalues, A, lambda);
+         JL_GC_PUSH1(&newA);
+         f64 *_newAData = (f64 *) jl_array_data(newA);
+         memcpy(AData, _newAData, 4 * sizeof(newAData[0]));
+         for (int i = 0; i < 4; i += 1)
+            newAData[i] = (f32) _newAData[i];
+         JL_GC_POP();
       }
 
       ImGui::End();

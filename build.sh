@@ -38,7 +38,7 @@ elif [ $OS = Darwin ]; then
    LIBS="\
    -L/opt/local/lib \
    -ljulia -Wl,-rpath,/opt/local/lib \
-   -lraylib
+   -lraylib \
    dependencies/rlImGui/rlImGui.o \
    dependencies/imgui/imgui.o \
    dependencies/imgui/imgui_draw.o \

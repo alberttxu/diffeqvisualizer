@@ -67,11 +67,35 @@ jl_value_t *call(jl_function_t *f, void *arg1, void *arg2, void *arg3)
    return result;
 }
 
+struct ComplexF32
+{
+   f32 rl;
+   f32 im;
+};
+
+bool isapprox(ComplexF32 a, ComplexF32 b)
+{
+   return isapprox(a.rl, b.rl) && isapprox(a.im, b.im);
+}
+
 struct ComplexF64
 {
    f64 rl;
    f64 im;
 };
+
+ComplexF64 toComplexF64(ComplexF32 a)
+{
+   ComplexF64 result;
+   result.rl = (f64) a.rl;
+   result.im = (f64) a.im;
+   return result;
+}
+
+bool isapprox(ComplexF64 a, ComplexF64 b)
+{
+   return isapprox(a.rl, b.rl) && isapprox(a.im, b.im);
+}
 
 static inline
 void printComplexF64(ComplexF64 x)
