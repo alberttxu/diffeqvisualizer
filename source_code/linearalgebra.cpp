@@ -76,6 +76,21 @@ bool isapprox(Mat2x2F64 A, Mat2x2F64 B)
    return true;
 }
 
+static inline
+Mat2x2F64 operator+(Mat2x2F64 A, Mat2x2F64 B)
+{
+   f64 c11 = A.elems[0] + B.elems[0];
+   f64 c21 = A.elems[1] + B.elems[1];
+   f64 c12 = A.elems[2] + B.elems[2];
+   f64 c22 = A.elems[3] + B.elems[3];
+   return Mat2x2F64(c11, c21, c12, c22);
+}
+
+/* Mat2x2F64 expm(Mat2x2F64 A) */
+/* { */
+/*    Mat2x2F64 result(1, 0, 0, 1); */
+/* } */
+
 /*
 #define maxnumcoeffs 20
 struct Polynomial
