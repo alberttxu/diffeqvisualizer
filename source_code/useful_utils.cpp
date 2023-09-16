@@ -107,3 +107,14 @@ f64 randfloat64(f64 minval, f64 maxval)
 {
    return (f64)rand() / (f64)(RAND_MAX) * (maxval - minval) + minval;
 }
+
+static inline
+bool any(bool *arr, int n)
+{
+   for (int i = 0; i < n; i += 1)
+   {
+      if (arr[i])
+         return true;
+   }
+   return false;
+}

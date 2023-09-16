@@ -15,7 +15,11 @@
 
 // our code
 #include "useful_utils.cpp"
+
+#define JULIA_BACKEND
+#ifdef JULIA_BACKEND
 #include "julia_helpers.cpp"
+#endif
 
 #define screenwidth 1618
 #define screenheight 1000
@@ -132,10 +136,11 @@ int main(void)
    f64 t = 0;
 #define dt 0.02
 
+#ifdef JULIA_BACKEND
    jl_init();
    eval("include(\"source_code/compute.jl\")");
 
-   jl_value_t *jlVecF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1);
+   /* jl_value_t *jlVecF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1); */
    jl_value_t *jlMatF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
 
    jl_array_t *x = jl_alloc_array_2d(jlMatF64type, 2, numtrajectories);
@@ -145,13 +150,10 @@ int main(void)
    jl_array_t *A = jl_alloc_array_2d(jlMatF64type, 2, 2);
    f64 *AData = (f64 *) jl_array_data(A);
 
-   jl_array_t *lambda = jl_alloc_array_1d(jlVecF64type, 4);
-   f64 *lambdaData = (f64 *) jl_array_data(lambda);
-
-   JL_GC_PUSH3(&x, &A, &lambda);
-   /* JL_GC_PUSH2(&x, &A); */
+   JL_GC_PUSH2(&x, &A);
 
    jl_function_t *solve_autonomous = getfunc("solve_autonomous");
+#endif
 
    f64 prevframetime_ms = 0;
    bool paused = false;
@@ -179,10 +181,12 @@ int main(void)
          Vector2 newtrajectorycoords = pixels2coords(GetMousePosition());
 
          initQueue(&trajectories[newtrajidx]);
+#ifdef JULIA_BACKEND
          assert(inarraybounds(&xData[2*newtrajidx + 0], xData, &xData[2*numtrajectories]));
          assert(inarraybounds(&xData[2*newtrajidx + 1], xData, &xData[2*numtrajectories]));
          xData[2*newtrajidx + 0] = (f64) newtrajectorycoords.x;
          xData[2*newtrajidx + 1] = (f64) newtrajectorycoords.y;
+#endif
          newtrajidx = (newtrajidx + 1) % numtrajectories;
       }
 
@@ -198,6 +202,7 @@ int main(void)
 
       Vector2 currentstates[numtrajectories];
 
+#ifdef JULIA_BACKEND
       { ZoneScopedN("julia");
       jl_value_t *matrix_2xN_states = call(solve_autonomous, x, A, jl_box_float64(dt));
       JL_GC_PUSH1(&matrix_2xN_states);
@@ -216,6 +221,7 @@ int main(void)
       }
       JL_GC_POP();
       }
+#endif
 
       { ZoneScopedN("draw trajectories");
       for (int i = 0; i < numtrajectories; i++)
@@ -264,7 +270,7 @@ int main(void)
       }
       ImGui::End();
 
-      ImGui::Begin("Matrix");
+      { ImGui::Begin("Matrix");
 
       bool A_was_modified[4] = {false, false, false, false};
 
@@ -282,10 +288,7 @@ int main(void)
       ImGui::EndTable();
 
       Eigen eigen;
-      if (A_was_modified[0]
-       || A_was_modified[1]
-       || A_was_modified[2]
-       || A_was_modified[3])
+      if (any(A_was_modified, 4))
       {
          for (int i = 0; i < 4; i += 1)
             AData[i] = (f64) newAData[i];
@@ -304,48 +307,8 @@ int main(void)
             eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
             eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
             eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
-
-      bool any_eig_was_modified = false;
-      if (ImGui::SliderFloat("lambda1 real", &neweigenvalues[0].rl, -20, 20))
-      {
-         if (!isapprox(neweigenvalues[0].im, 0.0f))
-            neweigenvalues[1].rl = neweigenvalues[0].rl;
-         any_eig_was_modified = true;
-      }
-      if (ImGui::SliderFloat("lambda1 im", &neweigenvalues[0].im, -20, 20))
-      {
-         neweigenvalues[1].im = -1 *  neweigenvalues[0].im;
-         any_eig_was_modified = true;
-      }
-      if (ImGui::SliderFloat("lambda2 real ", &neweigenvalues[1].rl, -20, 20))
-      {
-         if (!isapprox(neweigenvalues[1].im, 0.0f))
-            neweigenvalues[0].rl = neweigenvalues[1].rl;
-         any_eig_was_modified = true;
-      }
-      if (ImGui::SliderFloat("lambda2 im ", &neweigenvalues[1].im, -20, 20))
-      {
-         neweigenvalues[0].im = -1 * neweigenvalues[1].im;
-         any_eig_was_modified = true;
-      }
-
-      if (any_eig_was_modified)
-      {
-         lambdaData[0] = (f64) neweigenvalues[0].rl;
-         lambdaData[1] = (f64) neweigenvalues[0].im;
-         lambdaData[2] = (f64) neweigenvalues[1].rl;
-         lambdaData[3] = (f64) neweigenvalues[1].im;
-         jl_function_t *changeEigenvalues = getfunc("changeEigenvalues_wrapper");
-         jl_value_t *newA = call(changeEigenvalues, A, lambda);
-         JL_GC_PUSH1(&newA);
-         f64 *_newAData = (f64 *) jl_array_data(newA);
-         memcpy(AData, _newAData, 4 * sizeof(newAData[0]));
-         for (int i = 0; i < 4; i += 1)
-            newAData[i] = (f32) _newAData[i];
-         JL_GC_POP();
-      }
-
       ImGui::End();
+      }
 
       rlImGuiEnd();
       }
