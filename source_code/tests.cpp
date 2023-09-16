@@ -213,6 +213,13 @@ void test_ourlinearalgebra()
    assert(isapprox(A + B, Mat2x2F64(6, 10, 8, 12)));
    }
 
+   {
+   puts("==== matrix scalar mul ====");
+   f64 t = 2.0;
+   Mat2x2F64 A(1, 3, 2, 4);
+   assert(isapprox(t * A, Mat2x2F64(2, 6, 4, 8)));
+   }
+
    /* puts("==== polynomial eval ===="); */
    /* f64 coeffs[3] = {1, 2, 3}; */
    /* u8 degree = 2; */

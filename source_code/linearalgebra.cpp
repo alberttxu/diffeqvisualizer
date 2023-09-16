@@ -86,6 +86,12 @@ Mat2x2F64 operator+(Mat2x2F64 A, Mat2x2F64 B)
    return Mat2x2F64(c11, c21, c12, c22);
 }
 
+static inline
+Mat2x2F64 operator*(f64 t, Mat2x2F64 A)
+{
+   return Mat2x2F64(t * A.elems[0], t * A.elems[1], t * A.elems[2], t * A.elems[3]);
+}
+
 /* Mat2x2F64 expm(Mat2x2F64 A) */
 /* { */
 /*    Mat2x2F64 result(1, 0, 0, 1); */
