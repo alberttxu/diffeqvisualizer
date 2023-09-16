@@ -15,27 +15,6 @@ struct Vec2F64
    }
 };
 
-struct Mat2x2F64
-{
-   f64 elems[4];
-
-   Mat2x2F64(f64 a11, f64 a21, f64 a12, f64 a22)
-   {
-      elems[0] = a11;
-      elems[1] = a21;
-      elems[2] = a12;
-      elems[3] = a22;
-   }
-};
-
-static inline
-Vec2F64 matvecmul(Mat2x2F64 A, Vec2F64 x)
-{
-   f64 b1 = A.elems[0] * x.elems[0] + A.elems[2] * x.elems[1];
-   f64 b2 = A.elems[1] * x.elems[0] + A.elems[3] * x.elems[1];
-   return Vec2F64(b1, b2);
-}
-
 static inline
 void printVec2F64(Vec2F64 x)
 {
@@ -53,6 +32,34 @@ static inline
 bool isapprox(Vec2F64 a, Vec2F64 b)
 {
    return isapprox(a.elems[0], b.elems[0]) && isapprox(a.elems[1], b.elems[1]);
+}
+
+struct Mat2x2F64
+{
+   f64 elems[4];
+
+   Mat2x2F64(f64 a11, f64 a21, f64 a12, f64 a22)
+   {
+      elems[0] = a11;
+      elems[1] = a21;
+      elems[2] = a12;
+      elems[3] = a22;
+   }
+};
+
+static inline
+void printMat2x2F64(Mat2x2F64 A)
+{
+   printf("[ %f\t%f\n", A.elems[0], A.elems[2]);
+   printf("  %f\t%f ]\n", A.elems[1], A.elems[3]);
+}
+
+static inline
+Vec2F64 matvecmul(Mat2x2F64 A, Vec2F64 x)
+{
+   f64 b1 = A.elems[0] * x.elems[0] + A.elems[2] * x.elems[1];
+   f64 b2 = A.elems[1] * x.elems[0] + A.elems[3] * x.elems[1];
+   return Vec2F64(b1, b2);
 }
 
 static inline
@@ -92,10 +99,20 @@ Mat2x2F64 operator*(f64 t, Mat2x2F64 A)
    return Mat2x2F64(t * A.elems[0], t * A.elems[1], t * A.elems[2], t * A.elems[3]);
 }
 
-/* Mat2x2F64 expm(Mat2x2F64 A) */
-/* { */
-/*    Mat2x2F64 result(1, 0, 0, 1); */
-/* } */
+static inline
+Mat2x2F64 expm(Mat2x2F64 A)
+{
+   Mat2x2F64 result(1, 0, 0, 1);
+   Mat2x2F64 An(1, 0, 0, 1);
+   f64 factorial = 1;
+   for (int i = 1; i < 20; i += 1)
+   {
+      An = matmul(An, A);
+      factorial *= i;
+      result = result + (1/factorial) * An;
+   }
+   return result;
+}
 
 /*
 #define maxnumcoeffs 20

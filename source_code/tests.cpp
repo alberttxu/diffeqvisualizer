@@ -220,6 +220,17 @@ void test_ourlinearalgebra()
    assert(isapprox(t * A, Mat2x2F64(2, 6, 4, 8)));
    }
 
+   {
+   puts("==== matrix exponential ====");
+   Mat2x2F64 A(0, 0, 1, 0);
+   assert(isapprox(expm(A), Mat2x2F64(1, 0, 1, 1)));
+   f64 t = 2.0;
+   assert(isapprox(expm(t * A), Mat2x2F64(1, 0, t, 1)));
+
+   Mat2x2F64 B(-0.03140377097524905, 0.5774392661113738, -0.5030549245201645, 1.9722014759266104);
+   assert(isapprox(expm(B), Mat2x2F64(0.6678580086237933, 1.7115461994715255, -1.4910689222541662, 6.606600222449386)));
+   }
+
    /* puts("==== polynomial eval ===="); */
    /* f64 coeffs[3] = {1, 2, 3}; */
    /* u8 degree = 2; */
