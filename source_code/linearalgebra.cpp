@@ -55,8 +55,95 @@ bool isapprox(Vec2F64 a, Vec2F64 b)
    return isapprox(a.elems[0], b.elems[0]) && isapprox(a.elems[1], b.elems[1]);
 }
 
+static inline
+Mat2x2F64 matmul(Mat2x2F64 A, Mat2x2F64 B)
+{
+   f64 c11 = A.elems[0] * B.elems[0] + A.elems[2] * B.elems[1];
+   f64 c21 = A.elems[1] * B.elems[0] + A.elems[3] * B.elems[1];
+   f64 c12 = A.elems[0] * B.elems[2] + A.elems[2] * B.elems[3];
+   f64 c22 = A.elems[1] * B.elems[2] + A.elems[3] * B.elems[3];
+   return Mat2x2F64(c11, c21, c12, c22);
+}
+
+static inline
+bool isapprox(Mat2x2F64 A, Mat2x2F64 B)
+{
+   for (int i = 0; i < 4; i += 1)
+   {
+      if (!isapprox(A.elems[i], B.elems[i]))
+         return false;
+   }
+   return true;
+}
+
+/*
+#define maxnumcoeffs 20
 struct Polynomial
 {
-#define maxnumcoeffs 20
    f64 coeffs[maxnumcoeffs];
+   u8 degree;
 };
+
+Polynomial newPolynomial(f64 *coeffs, u8 degree)
+{
+   assert(degree < maxnumcoeffs);
+   Polynomial p;
+   p.degree = degree;
+   for (int n = 0; n <= p.degree; n += 1)
+   {
+      p.coeffs[n] = coeffs[n];
+   }
+   return p;
+}
+
+f64 eval(Polynomial p, f64 x)
+{
+   f64 result = 0;
+   for (int n = 0; n <= p.degree; n += 1)
+   {
+      result += p.coeffs[n] * pow(x, n);
+   }
+   return result;
+}
+
+u64 factorial(u32 n)
+{
+   u64 result = 1;
+   for (u32 i = 1; i <= n; i += 1)
+      result *= i;
+   return result;
+}
+
+// Padé approximant to the exponential function
+// DOI. 10.1137/090768539
+
+Polynomial p_km(u8 k, u8 m)
+{
+   assert(k < maxnumcoeffs);
+   Polynomial p;
+   p.degree = k;
+   for (u8 j = 0; j <= k; j += 1)
+   {
+      u64 num = factorial(k + m - j) * factorial(k);
+      u64 den = factorial(k + m) * factorial(k - j) * factorial(j);
+      p.coeffs[j] = (f64) num / (f64) den;
+   }
+   return p;
+}
+
+Polynomial q_km(u8 k, u8 m)
+{
+   assert(m < maxnumcoeffs);
+   Polynomial q;
+   q.degree = m;
+   for (u8 j = 0; j <= m; j += 1)
+   {
+      u64 num = factorial(k + m - j) * factorial(m);
+      if (j & 1)
+         num *= -1;
+      u64 den = factorial(k + m) * factorial(m - j) * factorial(j);
+      q.coeffs[j] = (f64) num / (f64) den;
+   }
+   return q;
+}
+*/

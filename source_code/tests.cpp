@@ -191,11 +191,29 @@ void test_raylib_imgui(void)
 
 void test_ourlinearalgebra()
 {
-   puts("==== our linear algebra ====");
+   {
+   puts("==== matrix vector mul ====");
    Vec2F64 x(-1.030979186488353, -0.4758607105915283);
    Mat2x2F64 A(-1.05695, 0.444654, -1.44453, 0.530531);
    Vec2F64 b = matvecmul(A, x);
    assert(isapprox(b, Vec2F64(1.7770899240891282, -0.7108874546900397)));
+   }
+
+   {
+   puts("==== matrix mul ====");
+   Mat2x2F64 A(1, 3, 2, 4);
+   Mat2x2F64 B(5, 7, 6, 8);
+   assert(isapprox(matmul(A, B), Mat2x2F64(19, 43, 22, 50)));
+   }
+
+   /* puts("==== polynomial eval ===="); */
+   /* f64 coeffs[3] = {1, 2, 3}; */
+   /* u8 degree = 2; */
+   /* Polynomial p = newPolynomial(coeffs, degree); */
+   /* assert(isapprox(eval(p, 5), 86)); */
+
+   /* puts("==== factorial ===="); */
+   /* assert(factorial(7) == 5040); */
 }
 
 int main(void)
