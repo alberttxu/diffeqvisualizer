@@ -7,6 +7,7 @@
 
 #include "useful_utils.cpp"
 #include "julia_helpers.cpp"
+#include "linearalgebra.cpp"
 
 typedef f64 (*g_ptr)(f64 x);
 g_ptr g = NULL;
@@ -188,9 +189,19 @@ void test_raylib_imgui(void)
 	//--------------------------------------------------------------------------------------
 }
 
+void test_ourlinearalgebra()
+{
+   puts("==== our linear algebra ====");
+   Vec2F64 x(-1.030979186488353, -0.4758607105915283);
+   Mat2x2F64 A(-1.05695, 0.444654, -1.44453, 0.530531);
+   Vec2F64 b = matvecmul(A, x);
+   assert(isapprox(b, Vec2F64(1.7770899240891282, -0.7108874546900397)));
+}
+
 int main(void)
 {
-   test_julia();
-   test_raylib_imgui();
+   /* test_julia(); */
+   /* test_raylib_imgui(); */
+   test_ourlinearalgebra();
    return 0;
 }

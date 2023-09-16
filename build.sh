@@ -126,4 +126,5 @@ fi
 
 set -xe
 
-$CC $CFLAGS $WARNINGS $INCLUDES -o main source_code/main.cpp $LIBS
+# $CC $CFLAGS $WARNINGS $INCLUDES -o main source_code/main.cpp $LIBS
+$CC $CFLAGS $WARNINGS $INCLUDES -o main source_code/main_nojulia.cpp $LIBS

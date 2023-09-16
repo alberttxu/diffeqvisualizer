@@ -1,4 +1,16 @@
 2023/08/10
+Putting on hold the eigenvalue editor for now.
+In order to ship (to the web), we need our own linear algebra routines for:
+- matrix exponential
+- eigendecomposition
+Julia doesn't officially support webassembly yet, and I'm not willing to create a temporary + hacky solution.
+
+Ideas for eigenvalue editor.
+- 2D pole plot
+   - snap to real axis
+
+
+2023/08/10
 Dear ImGui is rendering incorrectly on my Macbook Pro 2015 Retina 15-inch, but not on my external monitors.
 Looks like high DPI is a common issue in other projects:
 - https://github.com/ocornut/imgui/issues/2816 (similar to what I'm seeing)
