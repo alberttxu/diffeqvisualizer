@@ -239,16 +239,15 @@ void test_ourlinearalgebra()
    assert(isapprox(eigen.values[0].im, 0));
    assert(isapprox(eigen.values[1].rl, -0.3722813232690143));
    assert(isapprox(eigen.values[1].im, 0));
+   assert(isapprox(eigen.vectors[0][0].rl, 0.415974));
+   assert(isapprox(eigen.vectors[0][1].rl, 0.909377));
+   assert(isapprox(eigen.vectors[1][0].rl, -0.824565));
+   assert(isapprox(eigen.vectors[1][1].rl, 0.565767));
+   assert(eigen.vectors[0][0].im == 0);
+   assert(eigen.vectors[0][1].im == 0);
+   assert(eigen.vectors[1][0].im == 0);
+   assert(eigen.vectors[1][1].im == 0);
    }
-
-   /* puts("==== polynomial eval ===="); */
-   /* f64 coeffs[3] = {1, 2, 3}; */
-   /* u8 degree = 2; */
-   /* Polynomial p = newPolynomial(coeffs, degree); */
-   /* assert(isapprox(eval(p, 5), 86)); */
-
-   /* puts("==== factorial ===="); */
-   /* assert(factorial(7) == 5040); */
 }
 
 int main(void)

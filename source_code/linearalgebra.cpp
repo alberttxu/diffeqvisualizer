@@ -133,6 +133,54 @@ struct ComplexF64
 };
 
 static inline
+ComplexF64 operator+(ComplexF64 c, f64 a)
+{
+   return {c.rl + a, c.im};
+}
+
+static inline
+ComplexF64 operator+(f64 a, ComplexF64 c)
+{
+   return c + a;
+}
+
+static inline
+ComplexF64 operator-(ComplexF64 c, f64 a)
+{
+   return c + (-a);
+}
+
+static inline
+ComplexF64 operator-(f64 a, ComplexF64 c)
+{
+   return {a - c.rl, -c.im};
+}
+
+static inline
+ComplexF64 operator*(f64 a, ComplexF64 c)
+{
+   return {a * c.rl, a * c.im};
+}
+
+static inline
+ComplexF64 operator/(ComplexF64 c, f64 a)
+{
+   return (1/a) * c;
+}
+
+static inline
+f64 abs(ComplexF64 c)
+{
+   return sqrt(c.rl * c.rl + c.im * c.im);
+}
+
+static inline
+ComplexF64 conjugate(ComplexF64 c)
+{
+   return {c.rl, -c.im};
+}
+
+static inline
 ComplexF64 toComplexF64(ComplexF32 a)
 {
    ComplexF64 result;
@@ -164,7 +212,32 @@ struct Eigen
    ComplexF64 vectors[2][2];
 };
 
-// TODO: compute eigenvectors
+struct Vec2C64
+{
+   ComplexF64 elems[2];
+};
+
+static inline
+Vec2C64 operator*(f64 a, Vec2C64 v)
+{
+   return {a * v.elems[0], a * v.elems[1]};
+}
+
+static inline
+f64 norm(Vec2C64 v)
+{
+   return sqrt(pow(abs(v.elems[0]), 2) + pow(abs(v.elems[1]), 2));
+}
+
+static inline
+Vec2C64 normalize(Vec2C64 v)
+{
+   return 1/norm(v) * v;
+}
+
+// useful references:
+// - https://en.wikipedia.org/wiki/Eigenvalue_algorithm#2%C3%972_matrices
+// - https://people.math.harvard.edu/~knill/teaching/math21b2004/exhibits/2dmatrices/index.html
 static inline
 Eigen decomposition(Mat2x2F64 A)
 {
@@ -178,21 +251,52 @@ Eigen decomposition(Mat2x2F64 A)
    f64 detA = a11 * a22 - a12 * a21;
    f64 discriminant = trA * trA - 4 * detA;
 
+   ComplexF64 λ1 = {0, 0};
+   ComplexF64 λ2 = {0, 0};
    if (discriminant < 0)
    {
-      f64 λ1_rl = 0.5 * trA;
-      f64 λ1_im = 0.5 * sqrt(-discriminant);
-      f64 λ2_rl = λ1_rl;
-      f64 λ2_im = -λ1_im;
-      result.values[0] = (ComplexF64) {λ1_rl, λ1_im};
-      result.values[1] = (ComplexF64) {λ2_rl, λ2_im};
+      λ1.rl = 0.5 * trA;
+      λ1.im = 0.5 * sqrt(-discriminant);
+      λ2 = conjugate(λ1);
    }
    else
    {
-      f64 λ1 = 0.5 * (trA + sqrt(discriminant));
-      f64 λ2 = 0.5 * (trA - sqrt(discriminant));
-      result.values[0] = (ComplexF64) {λ1, 0};
-      result.values[1] = (ComplexF64) {λ2, 0};
+      f64 sqrt_discr = sqrt(discriminant);
+      λ1.rl = 0.5 * (trA + sqrt_discr);
+      λ2.rl = 0.5 * (trA - sqrt_discr);
    }
+
+   Vec2C64 v1;
+   Vec2C64 v2;
+   if (a21 != 0)
+   {
+      v1.elems[0] = λ1 - a22;
+      v1.elems[1] = {a21, 0};
+      v2.elems[0] = λ2 - a22;
+      v2.elems[1] = {a21, 0};
+   }
+   else if (a12 != 0)
+   {
+      v1.elems[0] = {a12, 0};
+      v1.elems[1] = λ1 - a11;
+      v2.elems[0] = {a12, 0};
+      v2.elems[1] = λ2 - a11;
+   }
+   else
+   {
+      v1.elems[0] = {1, 0};
+      v1.elems[1] = {0, 0};
+      v2.elems[0] = {0, 0};
+      v2.elems[1] = {1, 0};
+   }
+   v1 = normalize(v1);
+   v2 = normalize(v2);
+
+   result.values[0] = λ1;
+   result.values[1] = λ2;
+   result.vectors[0][0] = v1.elems[0];
+   result.vectors[0][1] = v1.elems[1];
+   result.vectors[1][0] = v2.elems[0];
+   result.vectors[1][1] = v2.elems[1];
    return result;
 }
