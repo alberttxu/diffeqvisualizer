@@ -89,16 +89,14 @@ bool inarraybounds(void *ptr, void *low, void *high)
 }
 
 static inline
-bool isapprox(f32 a, f32 b)
+bool isapprox(f32 a, f32 b, f32 tol = 1e-5f)
 {
-   f32 tol = 1e-5f;
    return fabsf(a - b) <= tol;
 }
 
 static inline
-bool isapprox(f64 a, f64 b)
+bool isapprox(f64 a, f64 b, f64 tol = 1e-5)
 {
-   f64 tol = 1e-5;
    return fabs(a - b) <= tol;
 }
 

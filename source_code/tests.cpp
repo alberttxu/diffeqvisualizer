@@ -231,6 +231,16 @@ void test_ourlinearalgebra()
    assert(isapprox(expm(B), Mat2x2F64(0.6678580086237933, 1.7115461994715255, -1.4910689222541662, 6.606600222449386)));
    }
 
+   {
+   puts("==== eigen decomposition ====");
+   Mat2x2F64 A(1, 3, 2, 4);
+   Eigen eigen = decomposition(A);
+   assert(isapprox(eigen.values[0].rl, 5.372281323269014));
+   assert(isapprox(eigen.values[0].im, 0));
+   assert(isapprox(eigen.values[1].rl, -0.3722813232690143));
+   assert(isapprox(eigen.values[1].im, 0));
+   }
+
    /* puts("==== polynomial eval ===="); */
    /* f64 coeffs[3] = {1, 2, 3}; */
    /* u8 degree = 2; */

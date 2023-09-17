@@ -114,74 +114,85 @@ Mat2x2F64 expm(Mat2x2F64 A)
    return result;
 }
 
-/*
-#define maxnumcoeffs 20
-struct Polynomial
+struct ComplexF32
 {
-   f64 coeffs[maxnumcoeffs];
-   u8 degree;
+   f32 rl;
+   f32 im;
 };
 
-Polynomial newPolynomial(f64 *coeffs, u8 degree)
+static inline
+bool isapprox(ComplexF32 a, ComplexF32 b)
 {
-   assert(degree < maxnumcoeffs);
-   Polynomial p;
-   p.degree = degree;
-   for (int n = 0; n <= p.degree; n += 1)
-   {
-      p.coeffs[n] = coeffs[n];
-   }
-   return p;
+   return isapprox(a.rl, b.rl) && isapprox(a.im, b.im);
 }
 
-f64 eval(Polynomial p, f64 x)
+struct ComplexF64
 {
-   f64 result = 0;
-   for (int n = 0; n <= p.degree; n += 1)
-   {
-      result += p.coeffs[n] * pow(x, n);
-   }
+   f64 rl;
+   f64 im;
+};
+
+static inline
+ComplexF64 toComplexF64(ComplexF32 a)
+{
+   ComplexF64 result;
+   result.rl = (f64) a.rl;
+   result.im = (f64) a.im;
    return result;
 }
 
-u64 factorial(u32 n)
+static inline
+bool isapprox(ComplexF64 a, ComplexF64 b)
 {
-   u64 result = 1;
-   for (u32 i = 1; i <= n; i += 1)
-      result *= i;
+   return isapprox(a.rl, b.rl) && isapprox(a.im, b.im);
+}
+
+static inline
+void printComplexF64(ComplexF64 x)
+{
+   printf("%f ", x.rl);
+   if (x.im > 0)
+      printf("+");
+   else
+      printf("-");
+   printf(" %fi", fabs(x.im));
+}
+
+struct Eigen
+{
+   ComplexF64 values[2];
+   ComplexF64 vectors[2][2];
+};
+
+// TODO: compute eigenvectors
+static inline
+Eigen decomposition(Mat2x2F64 A)
+{
+   Eigen result;
+   f64 a11 = A.elems[0];
+   f64 a21 = A.elems[1];
+   f64 a12 = A.elems[2];
+   f64 a22 = A.elems[3];
+
+   f64 trA = a11 + a22;
+   f64 detA = a11 * a22 - a12 * a21;
+   f64 discriminant = trA * trA - 4 * detA;
+
+   if (discriminant < 0)
+   {
+      f64 λ1_rl = 0.5 * trA;
+      f64 λ1_im = 0.5 * sqrt(-discriminant);
+      f64 λ2_rl = λ1_rl;
+      f64 λ2_im = -λ1_im;
+      result.values[0] = (ComplexF64) {λ1_rl, λ1_im};
+      result.values[1] = (ComplexF64) {λ2_rl, λ2_im};
+   }
+   else
+   {
+      f64 λ1 = 0.5 * (trA + sqrt(discriminant));
+      f64 λ2 = 0.5 * (trA - sqrt(discriminant));
+      result.values[0] = (ComplexF64) {λ1, 0};
+      result.values[1] = (ComplexF64) {λ2, 0};
+   }
    return result;
 }
-
-// Padé approximant to the exponential function
-// DOI. 10.1137/090768539
-
-Polynomial p_km(u8 k, u8 m)
-{
-   assert(k < maxnumcoeffs);
-   Polynomial p;
-   p.degree = k;
-   for (u8 j = 0; j <= k; j += 1)
-   {
-      u64 num = factorial(k + m - j) * factorial(k);
-      u64 den = factorial(k + m) * factorial(k - j) * factorial(j);
-      p.coeffs[j] = (f64) num / (f64) den;
-   }
-   return p;
-}
-
-Polynomial q_km(u8 k, u8 m)
-{
-   assert(m < maxnumcoeffs);
-   Polynomial q;
-   q.degree = m;
-   for (u8 j = 0; j <= m; j += 1)
-   {
-      u64 num = factorial(k + m - j) * factorial(m);
-      if (j & 1)
-         num *= -1;
-      u64 den = factorial(k + m) * factorial(m - j) * factorial(j);
-      q.coeffs[j] = (f64) num / (f64) den;
-   }
-   return q;
-}
-*/
