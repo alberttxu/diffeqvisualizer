@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# use_julia_backend=true
+use_julia_backend=false
+
 CC=c++
 CFLAGS="-std=c++11 -g3"
 
@@ -12,6 +15,10 @@ WARNINGS="\
 -Wconversion \
 -Wno-sign-conversion \
 "
+
+if [ "$use_julia_backend" = true ]; then
+   CFLAGS="$CFLAGS -D JULIA_BACKEND"
+fi
 
 OS=`uname`
 echo "Operating system: $OS"
@@ -32,12 +39,10 @@ if [ $OS = Linux ]; then
 
 elif [ $OS = Darwin ]; then
    INCLUDES="\
-   -I/opt/local/include/julia \
    -Idependencies/raylib/src \
    "
    LIBS="\
    -L/opt/local/lib \
-   -ljulia -Wl,-rpath,/opt/local/lib \
    -lraylib \
    dependencies/rlImGui/rlImGui.o \
    dependencies/imgui/imgui.o \
@@ -46,6 +51,11 @@ elif [ $OS = Darwin ]; then
    dependencies/imgui/imgui_widgets.o \
    "
    # dependencies/raylib/src/libraylib.a -framework Cocoa -framework OpenGL -framework IOKit \
+
+   if [ "$use_julia_backend" = true ]; then
+      INCLUDES="$INCLUDES -I/opt/local/include/julia"
+      LIBS="$LIBS -ljulia -Wl,-rpath,/opt/local/lib"
+   fi
 fi
 
 build_raylib()

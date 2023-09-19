@@ -15,8 +15,6 @@
 // our code
 #include "useful_utils.cpp"
 
-/* #define JULIA_BACKEND */
-
 #ifdef JULIA_BACKEND
    #include <julia.h>
    #include "julia_helpers.cpp"
