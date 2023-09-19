@@ -46,12 +46,21 @@ Vector2 coords2pixels(Vector2 graph_coords)
 }
 
 static inline
-Vector2 pixels2coords(Vector2 pixel_coords)
+Vector2 coords2pixels(Vec2F64 graph_coords)
 {
-   Vector2 graph_coords = {
-       (pixel_coords.x - screenwidth / 2) / pixelsperunit,
-      -(pixel_coords.y - screenheight / 2) / pixelsperunit,
-   }; return graph_coords;
+   Vector2 coords_f32;
+   coords_f32.x = (f32) graph_coords.elems[0];
+   coords_f32.y = (f32) graph_coords.elems[1];
+   return coords2pixels(coords_f32);
+}
+
+static inline
+Vec2F64 pixels2coords(Vector2 pixel_coords)
+{
+   return {
+       ((f64)pixel_coords.x - screenwidth / 2) / pixelsperunit,
+      -((f64)pixel_coords.y - screenheight / 2) / pixelsperunit,
+   };
 }
 
 static inline
@@ -92,9 +101,9 @@ void drawcoordaxes()
 #define numtrajectories 100
 
 static inline
-void resettrajectories(f64 *arr_2xN)
+void resetstates(f64 *arr_2xN)
 {
-   f64 boxlim = 20;
+   f64 boxlim = 40;
    for (int i = 0; i < numtrajectories; i += 1)
    {
       arr_2xN[2*i + 0] = randfloat64(-boxlim, boxlim);
@@ -105,7 +114,7 @@ void resettrajectories(f64 *arr_2xN)
 #define histcapacity 16
 struct Queue
 {
-   Vector2 recentpositions[histcapacity];
+   Vec2F64 recentpositions[histcapacity];
    int curidx;
    int size;
 };
@@ -117,12 +126,29 @@ void initQueue(Queue *q)
    q->size = 0;
 }
 
-void updateposition(Queue *q, Vector2 position)
+void updateposition(Queue *q, Vec2F64 position)
 {
    q->recentpositions[q->curidx] = position;
    q->curidx = (q->curidx + 1) % histcapacity;
    q->size = min(histcapacity, q->size + 1);
 }
+
+#ifdef JULIA_BACKEND
+static inline
+void addstate(f64 *currentstates, int idx, Vec2F64 newtrajectorycoords)
+{
+   assert(inarraybounds(&currentstates[2*idx + 0], currentstates, &currentstates[2*numtrajectories]));
+   assert(inarraybounds(&currentstates[2*idx + 1], currentstates, &currentstates[2*numtrajectories]));
+   currentstates[2*idx + 0] = newtrajectorycoords.elems[0];
+   currentstates[2*idx + 1] = newtrajectorycoords.elems[1];
+}
+#else
+static inline
+void addstate(Vec2F64 *currentstates, int idx, Vec2F64 newtrajectorycoords)
+{
+   currentstates[idx] = newtrajectorycoords;
+}
+#endif
 
 int main(void)
 {
@@ -147,8 +173,7 @@ int main(void)
    jl_value_t *jlMatF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
 
    jl_array_t *x = jl_alloc_array_2d(jlMatF64type, 2, numtrajectories);
-   f64 *xData = (f64 *) jl_array_data(x);
-   resettrajectories(xData);
+   f64 *currentstates = (f64 *) jl_array_data(x);
 
    jl_array_t *A = jl_alloc_array_2d(jlMatF64type, 2, 2);
    f64 *AData = (f64 *) jl_array_data(A);
@@ -157,10 +182,11 @@ int main(void)
 
    jl_function_t *solve_autonomous = getfunc("solve_autonomous");
 #else
-   f64 currentstates[numtrajectories][2];
+   Vec2F64 currentstates[numtrajectories];
    Mat2x2F64 A(0, 0, 0, 0);
-   resettrajectories((f64 *)currentstates);
+   f64 *AData = A.elems;
 #endif
+   resetstates((f64 *)currentstates);
 
    f32 newAData[4] = {0, 0, 0, 0};
 
@@ -182,64 +208,46 @@ int main(void)
          pixelsperunit = (int) (powf(1.05f, GetMouseWheelMove()) * pixelsperunit);
       pixelsperunit = clampint(pixelsperunit, 20, 1000);
 
-      Vector2 newstates[numtrajectories];
-
       if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse)
       {
-         Vector2 newtrajectorycoords = pixels2coords(GetMousePosition());
+         Vec2F64 newtrajectorycoords = pixels2coords(GetMousePosition());
          initQueue(&trajectories[newtrajidx]);
-
-#ifdef JULIA_BACKEND
-         assert(inarraybounds(&xData[2*newtrajidx + 0], xData, &xData[2*numtrajectories]));
-         assert(inarraybounds(&xData[2*newtrajidx + 1], xData, &xData[2*numtrajectories]));
-         xData[2*newtrajidx + 0] = (f64) newtrajectorycoords.x;
-         xData[2*newtrajidx + 1] = (f64) newtrajectorycoords.y;
-#else
-         currentstates[newtrajidx][0] = (f64) newtrajectorycoords.x;
-         currentstates[newtrajidx][1] = (f64) newtrajectorycoords.y;
-#endif
-
+         addstate(currentstates, newtrajidx, newtrajectorycoords);
          newtrajidx = (newtrajidx + 1) % numtrajectories;
       }
 
+      { ZoneScopedN("update trajectories");
 #ifdef JULIA_BACKEND
-      { ZoneScopedN("julia");
-      jl_value_t *matrix_2xN_states = call(solve_autonomous, x, A, jl_box_float64(dt));
-      JL_GC_PUSH1(&matrix_2xN_states);
-      jl_array_t *xt = (jl_array_t *) matrix_2xN_states;
-      f64 *xtData = (f64 *)jl_array_data(xt);
-      for (int i = 0; i < numtrajectories; i += 1)
-      {
-         newstates[i].x = (f32)xtData[2*i + 0];
-         newstates[i].y = (f32)xtData[2*i + 1];
-      }
+      jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x, A, jl_box_float64(dt));
+      JL_GC_PUSH1(&matrix_2xN_newstates);
+      f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
+
       if (!paused)
       {
          for (int i = 0; i < numtrajectories; i++)
-            updateposition(&trajectories[i], newstates[i]);
-         memcpy(xData, xtData, (numtrajectories) * 2 * sizeof(f64));
+         {
+            updateposition(&trajectories[i], *(Vec2F64 *)&newstates[2*i]);
+         }
+         memcpy(currentstates, newstates, numtrajectories * 2 * sizeof(f64));
       }
       JL_GC_POP();
-      }
 #else
+      Mat2x2F64 updateMatrix = expm(dt * A);
       for (int i = 0; i < numtrajectories; i += 1)
       {
-         Vec2F64 xt = matvecmul(expm(dt * A), Vec2F64(currentstates[i][0], currentstates[i][1]));
-         newstates[i].x = (f32)xt.elems[0];
-         newstates[i].y = (f32)xt.elems[1];
+         Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
+
          if (!paused)
          {
-            updateposition(&trajectories[i], newstates[i]);
-            currentstates[i][0] = xt.elems[0];
-            currentstates[i][1] = xt.elems[1];
+            updateposition(&trajectories[i], newstate);
+            currentstates[i] = newstate;
          }
       }
 #endif
+      }
 
       BeginDrawing();
-
       ClearBackground(RAYWHITE);
-
       drawcoordaxes();
 
       DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
@@ -271,11 +279,7 @@ int main(void)
       {
          t = 0;
 
-#ifdef JULIA_BACKEND
-         resettrajectories(xData);
-#else
-         resettrajectories((f64 *)currentstates);
-#endif
+         resetstates((f64 *)currentstates);
          for (int i = 0; i < numtrajectories; i++)
             initQueue(&trajectories[i]);
       }
@@ -297,8 +301,8 @@ int main(void)
       }
       ImGui::End();
 
-      { ImGui::Begin("Matrix");
-
+      {
+      ImGui::Begin("Matrix editor");
       bool A_was_modified[4] = {false, false, false, false};
 
       ImGui::BeginTable("A", 2);
@@ -318,15 +322,10 @@ int main(void)
       if (any(A_was_modified, 4))
       {
          for (int i = 0; i < 4; i += 1)
-         {
-#ifdef JULIA_BACKEND
             AData[i] = (f64) newAData[i];
-#else
-            A.elems[i] = (f64) newAData[i];
-#endif
-         }
-         eigen = decomposition(A);
       }
+
+      eigen = decomposition(A);
 
       ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
             eigen.values[0].rl, eigen.values[0].im,

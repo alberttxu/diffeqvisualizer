@@ -8,6 +8,12 @@ struct Vec2F64
 {
    f64 elems[2];
 
+   Vec2F64()
+   {
+      elems[0] = 0;
+      elems[1] = 0;
+   }
+
    Vec2F64(f64 x1, f64 x2)
    {
       elems[0] = x1;
