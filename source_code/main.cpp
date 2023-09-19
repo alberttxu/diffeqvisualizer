@@ -112,25 +112,25 @@ void resetstates(f64 *arr_2xN)
 }
 
 #define histcapacity 16
-struct Queue
+struct Trajectory
 {
    Vec2F64 recentpositions[histcapacity];
    int curidx;
    int size;
 };
 
-void initQueue(Queue *q)
+void initTrajectory(Trajectory *t)
 {
-   memset(q->recentpositions, 0, histcapacity * sizeof(q->recentpositions[0]));
-   q->curidx = 0;
-   q->size = 0;
+   memset(t->recentpositions, 0, histcapacity * sizeof(t->recentpositions[0]));
+   t->curidx = 0;
+   t->size = 0;
 }
 
-void updateposition(Queue *q, Vec2F64 position)
+void updateposition(Trajectory *t, Vec2F64 position)
 {
-   q->recentpositions[q->curidx] = position;
-   q->curidx = (q->curidx + 1) % histcapacity;
-   q->size = min(histcapacity, q->size + 1);
+   t->recentpositions[t->curidx] = position;
+   t->curidx = (t->curidx + 1) % histcapacity;
+   t->size = min(histcapacity, t->size + 1);
 }
 
 #ifdef JULIA_BACKEND
@@ -157,10 +157,10 @@ int main(void)
    rlImGuiSetup(true);
    ImGuiIO& io = ImGui::GetIO();
 
-   Queue trajectories[numtrajectories];
+   Trajectory trajectories[numtrajectories];
    int newtrajidx = 0;
    for (int i = 0; i < numtrajectories; i++)
-      initQueue(&trajectories[i]);
+      initTrajectory(&trajectories[i]);
 
    f64 t = 0;
 #define dt 0.02
@@ -210,9 +210,9 @@ int main(void)
 
       if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse)
       {
-         Vec2F64 newtrajectorycoords = pixels2coords(GetMousePosition());
-         initQueue(&trajectories[newtrajidx]);
-         addstate(currentstates, newtrajidx, newtrajectorycoords);
+         Vec2F64 newcoords = pixels2coords(GetMousePosition());
+         initTrajectory(&trajectories[newtrajidx]);
+         addstate(currentstates, newtrajidx, newcoords);
          newtrajidx = (newtrajidx + 1) % numtrajectories;
       }
 
@@ -257,7 +257,7 @@ int main(void)
       { ZoneScopedN("draw trajectories");
       for (int i = 0; i < numtrajectories; i++)
       {
-         Queue trajectory = trajectories[i];
+         Trajectory trajectory = trajectories[i];
          for (int ago = 0; ago < trajectory.size; ago++)
          {
             f32 radius = 3.0f - 0.1f * ago;
@@ -281,7 +281,7 @@ int main(void)
 
          resetstates((f64 *)currentstates);
          for (int i = 0; i < numtrajectories; i++)
-            initQueue(&trajectories[i]);
+            initTrajectory(&trajectories[i]);
       }
 
       if (paused)
