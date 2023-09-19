@@ -108,6 +108,8 @@ fi
 
 if [ $1 = "debug" ]; then
    CFLAGS="$CFLAGS -O0"
+elif [ $1 = "release" ]; then
+   CFLAGS="$CFLAGS -O3"
 elif [ $1 = "sanitize" ]; then
    CC="/opt/local/bin/clang++-mp-16"
    CFLAGS="$CFLAGS -fsanitize=address -fno-omit-frame-pointer -O3"
