@@ -4,3 +4,6 @@ tests
 dependencies/TracyClient.o
 imgui.ini
 .cache/
+main.html
+main.js
+main.wasm
