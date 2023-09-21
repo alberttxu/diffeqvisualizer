@@ -11,10 +11,12 @@
 #include "../dependencies/rlImGui/rlImGui.h"
 #include "../dependencies/imgui/imgui.h"
 #include "../dependencies/tracy/public/tracy/Tracy.hpp"
+#ifdef WEB
+   #include <emscripten.h>
+#endif
 
 // our code
 #include "useful_utils.cpp"
-
 #ifdef JULIA_BACKEND
    #include <julia.h>
    #include "julia_helpers.cpp"
@@ -193,31 +195,31 @@ void gameloop()
 
    { ZoneScopedN("update trajectories");
 #ifdef JULIA_BACKEND
-      jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x_jlarr, A, jl_box_float64(dt));
-      JL_GC_PUSH1(&matrix_2xN_newstates);
-      f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
+   jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x_jlarr, A, jl_box_float64(dt));
+   JL_GC_PUSH1(&matrix_2xN_newstates);
+   f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
+
+   if (!paused)
+   {
+      for (int i = 0; i < numtrajectories; i++)
+      {
+         updateposition(&trajectories[i], *(Vec2F64 *)&newstates[2*i]);
+      }
+      memcpy(currentstates, newstates, numtrajectories * 2 * sizeof(f64));
+   }
+   JL_GC_POP();
+#else
+   Mat2x2F64 updateMatrix = expm(dt * A);
+   for (int i = 0; i < numtrajectories; i += 1)
+   {
+      Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
 
       if (!paused)
       {
-         for (int i = 0; i < numtrajectories; i++)
-         {
-            updateposition(&trajectories[i], *(Vec2F64 *)&newstates[2*i]);
-         }
-         memcpy(currentstates, newstates, numtrajectories * 2 * sizeof(f64));
+         updateposition(&trajectories[i], newstate);
+         currentstates[i] = newstate;
       }
-      JL_GC_POP();
-#else
-      Mat2x2F64 updateMatrix = expm(dt * A);
-      for (int i = 0; i < numtrajectories; i += 1)
-      {
-         Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
-
-         if (!paused)
-         {
-            updateposition(&trajectories[i], newstate);
-            currentstates[i] = newstate;
-         }
-      }
+   }
 #endif
    }
 
@@ -230,90 +232,90 @@ void gameloop()
    DrawText(TextFormat("pixelsperunit = %d", pixelsperunit), 10, 70, 20, DARKGRAY);
 
    { ZoneScopedN("draw trajectories");
-      for (int i = 0; i < numtrajectories; i++)
+   for (int i = 0; i < numtrajectories; i++)
+   {
+      Trajectory trajectory = trajectories[i];
+      for (int ago = 0; ago < trajectory.size; ago++)
       {
-         Trajectory trajectory = trajectories[i];
-         for (int ago = 0; ago < trajectory.size; ago++)
-         {
-            f32 radius = 3.0f - 0.1f * ago;
-            int j = trajectory.curidx - 1 - ago;
-            if (j < 0)
-               j += histcapacity;
-            DrawCircleV(coords2pixels(trajectory.recentpositions[j]), radius, MAROON);
-         }
+         f32 radius = 3.0f - 0.1f * ago;
+         int j = trajectory.curidx - 1 - ago;
+         if (j < 0)
+            j += histcapacity;
+         DrawCircleV(coords2pixels(trajectory.recentpositions[j]), radius, MAROON);
       }
+   }
    }
 
    { ZoneScopedN("Post-iteration work");
 
-      rlImGuiBegin();
+   rlImGuiBegin();
 
-      ImGui::Begin("Controls");
-      resetwasclicked = ImGui::Button("reset");
-      if (resetwasclicked)
-      {
-         t = 0;
+   ImGui::Begin("Controls");
+   resetwasclicked = ImGui::Button("reset");
+   if (resetwasclicked)
+   {
+      t = 0;
 
-         resetstates((f64 *)currentstates);
-         for (int i = 0; i < numtrajectories; i++)
-            initTrajectory(&trajectories[i]);
-      }
+      resetstates((f64 *)currentstates);
+      for (int i = 0; i < numtrajectories; i++)
+         initTrajectory(&trajectories[i]);
+   }
 
-      if (paused)
-      {
-         DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
-         resumewasclicked = ImGui::Button("resume");
-         if (resumewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
-            paused = false;
-      }
-      else
-      {
-         t += dt;
+   if (paused)
+   {
+      DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
+      resumewasclicked = ImGui::Button("resume");
+      if (resumewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
+         paused = false;
+   }
+   else
+   {
+      t += dt;
 
-         pausewasclicked = ImGui::Button("pause");
-         if (pausewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
-            paused = true;
-      }
-      ImGui::End();
+      pausewasclicked = ImGui::Button("pause");
+      if (pausewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
+         paused = true;
+   }
+   ImGui::End();
 
-      {
-         ImGui::Begin("Matrix editor");
-         bool A_was_modified[4] = {false, false, false, false};
+   {
+   ImGui::Begin("Matrix editor");
+   bool A_was_modified[4] = {false, false, false, false};
 
-         ImGui::BeginTable("A", 2);
-         ImGui::TableNextRow();
-         ImGui::TableNextColumn();
-         A_was_modified[0] = ImGui::SliderFloat("A11", &newAData[0], -20, 20);
-         ImGui::TableNextColumn();
-         A_was_modified[1] = ImGui::SliderFloat("A12", &newAData[2], -20, 20);
-         ImGui::TableNextRow();
-         ImGui::TableNextColumn();
-         A_was_modified[2] = ImGui::SliderFloat("A21", &newAData[1], -20, 20);
-         ImGui::TableNextColumn();
-         A_was_modified[3] = ImGui::SliderFloat("A22", &newAData[3], -20, 20);
-         ImGui::EndTable();
+   ImGui::BeginTable("A", 2);
+   ImGui::TableNextRow();
+   ImGui::TableNextColumn();
+   A_was_modified[0] = ImGui::SliderFloat("A11", &newAData[0], -20, 20);
+   ImGui::TableNextColumn();
+   A_was_modified[1] = ImGui::SliderFloat("A12", &newAData[2], -20, 20);
+   ImGui::TableNextRow();
+   ImGui::TableNextColumn();
+   A_was_modified[2] = ImGui::SliderFloat("A21", &newAData[1], -20, 20);
+   ImGui::TableNextColumn();
+   A_was_modified[3] = ImGui::SliderFloat("A22", &newAData[3], -20, 20);
+   ImGui::EndTable();
 
-         Eigen eigen;
-         if (any(A_was_modified, 4))
-         {
-            for (int i = 0; i < 4; i += 1)
-               AData[i] = (f64) newAData[i];
-         }
+   Eigen eigen;
+   if (any(A_was_modified, 4))
+   {
+      for (int i = 0; i < 4; i += 1)
+         AData[i] = (f64) newAData[i];
+   }
 
-         eigen = decomposition(A);
+   eigen = decomposition(A);
 
-         ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
-               eigen.values[0].rl, eigen.values[0].im,
-               eigen.values[1].rl, eigen.values[1].im);
-         ImGui::Text("eigenvectors:\n[%f + %f i, %f + %f i]\n[%f + %f i, %f + %f i]",
-               eigen.vectors[0][0].rl, eigen.vectors[0][0].im,
-               eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
-               eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
-               eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
-         ImGui::End();
-      }
+   ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
+         eigen.values[0].rl, eigen.values[0].im,
+         eigen.values[1].rl, eigen.values[1].im);
+   ImGui::Text("eigenvectors:\n[%f + %f i, %f + %f i]\n[%f + %f i, %f + %f i]",
+         eigen.vectors[0][0].rl, eigen.vectors[0][0].im,
+         eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
+         eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
+         eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
+   ImGui::End();
+   }
 
-      rlImGuiEnd();
+   rlImGuiEnd();
    }
 
    f64 t_frameend = GetTime();
@@ -326,13 +328,10 @@ void gameloop()
 int main(void)
 {
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
-   SetTargetFPS(targetfps);
    rlImGuiSetup(true);
 
    for (int i = 0; i < numtrajectories; i++)
       initTrajectory(&trajectories[i]);
-
-   t = 0;
 
 #ifdef JULIA_BACKEND
    jl_init();
@@ -354,8 +353,16 @@ int main(void)
 #endif
    resetstates((f64 *) currentstates);
 
+#ifdef WEB
+   // https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_set_main_loop
+   int fps = 0; // let browser handle fps
+   bool simulate_infinite_loop = false;
+   emscripten_set_main_loop(gameloop, fps, simulate_infinite_loop);
+#else
+   SetTargetFPS(targetfps);
    while (!WindowShouldClose())   // Detect window close button or ESC key
       gameloop();
+#endif
 
    return 0;
 }
