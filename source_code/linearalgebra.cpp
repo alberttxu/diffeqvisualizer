@@ -44,6 +44,14 @@ struct Mat2x2F64
 {
    f64 elems[4];
 
+   Mat2x2F64()
+   {
+      elems[0] = 0;
+      elems[1] = 0;
+      elems[2] = 0;
+      elems[3] = 0;
+   }
+
    Mat2x2F64(f64 a11, f64 a21, f64 a12, f64 a22)
    {
       elems[0] = a11;

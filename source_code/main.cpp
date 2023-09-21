@@ -148,75 +148,52 @@ void addstate(Vec2F64 *currentstates, int idx, Vec2F64 newtrajectorycoords)
 }
 #endif
 
-int main(void)
-{
-   InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
-   SetTargetFPS(targetfps);
-   rlImGuiSetup(true);
-   ImGuiIO& io = ImGui::GetIO();
-
-   Trajectory trajectories[numtrajectories];
-   int newtrajidx = 0;
-   for (int i = 0; i < numtrajectories; i++)
-      initTrajectory(&trajectories[i]);
-
-   f64 t = 0;
+// Game data
+Trajectory trajectories[numtrajectories];
+int newtrajidx = 0;
+f64 t = 0;
 #define dt 0.02
-
 #ifdef JULIA_BACKEND
-   jl_init();
-   eval("include(\"source_code/compute.jl\")");
-
-   /* jl_value_t *jlVecF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1); */
-   jl_value_t *jlMatF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
-
-   jl_array_t *x = jl_alloc_array_2d(jlMatF64type, 2, numtrajectories);
-   f64 *currentstates = (f64 *) jl_array_data(x);
-
-   jl_array_t *A = jl_alloc_array_2d(jlMatF64type, 2, 2);
-   f64 *AData = (f64 *) jl_array_data(A);
-
-   JL_GC_PUSH2(&x, &A);
-
-   jl_function_t *solve_autonomous = getfunc("solve_autonomous");
+f64 *currentstates;
+jl_array_t *A;
+jl_array_t *x_jlarr;
+jl_function_t *solve_autonomous;
 #else
-   Vec2F64 currentstates[numtrajectories];
-   Mat2x2F64 A(0, 0, 0, 0);
-   f64 *AData = A.elems;
+Vec2F64 currentstates[numtrajectories];
+Mat2x2F64 A;
 #endif
-   resetstates((f64 *)currentstates);
+f64 *AData;
+f32 newAData[4] = {0, 0, 0, 0};
+f64 prevframetime_ms = 0;
+bool paused = false;
+bool resetwasclicked = false;
+bool pausewasclicked = false;
+bool resumewasclicked = false;
 
-   f32 newAData[4] = {0, 0, 0, 0};
+void gameloop()
+{
+   FrameMark;
+   static ImGuiIO& io = ImGui::GetIO();
+   f64 t_framestart = GetTime();
 
-   f64 prevframetime_ms = 0;
-   bool paused = false;
-   bool resetwasclicked = false;
-   bool pausewasclicked = false;
-   bool resumewasclicked = false;
+   if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
+      return;
 
-   while (!WindowShouldClose())   // Detect window close button or ESC key
+   if (!io.WantCaptureMouse)
+      pixelsperunit = (int) (powf(1.05f, GetMouseWheelMove()) * pixelsperunit);
+   pixelsperunit = clampint(pixelsperunit, 20, 1000);
+
+   if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse)
    {
-      FrameMark;
-      f64 t_framestart = GetTime();
+      Vec2F64 newcoords = pixels2coords(GetMousePosition());
+      initTrajectory(&trajectories[newtrajidx]);
+      addstate(currentstates, newtrajidx, newcoords);
+      newtrajidx = (newtrajidx + 1) % numtrajectories;
+   }
 
-      if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
-         break;
-
-      if (!io.WantCaptureMouse)
-         pixelsperunit = (int) (powf(1.05f, GetMouseWheelMove()) * pixelsperunit);
-      pixelsperunit = clampint(pixelsperunit, 20, 1000);
-
-      if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse)
-      {
-         Vec2F64 newcoords = pixels2coords(GetMousePosition());
-         initTrajectory(&trajectories[newtrajidx]);
-         addstate(currentstates, newtrajidx, newcoords);
-         newtrajidx = (newtrajidx + 1) % numtrajectories;
-      }
-
-      { ZoneScopedN("update trajectories");
+   { ZoneScopedN("update trajectories");
 #ifdef JULIA_BACKEND
-      jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x, A, jl_box_float64(dt));
+      jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x_jlarr, A, jl_box_float64(dt));
       JL_GC_PUSH1(&matrix_2xN_newstates);
       f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
 
@@ -242,17 +219,17 @@ int main(void)
          }
       }
 #endif
-      }
+   }
 
-      BeginDrawing();
-      ClearBackground(RAYWHITE);
-      drawcoordaxes();
+   BeginDrawing();
+   ClearBackground(RAYWHITE);
+   drawcoordaxes();
 
-      DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
-      DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
-      DrawText(TextFormat("pixelsperunit = %d", pixelsperunit), 10, 70, 20, DARKGRAY);
+   DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
+   DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
+   DrawText(TextFormat("pixelsperunit = %d", pixelsperunit), 10, 70, 20, DARKGRAY);
 
-      { ZoneScopedN("draw trajectories");
+   { ZoneScopedN("draw trajectories");
       for (int i = 0; i < numtrajectories; i++)
       {
          Trajectory trajectory = trajectories[i];
@@ -265,9 +242,9 @@ int main(void)
             DrawCircleV(coords2pixels(trajectory.recentpositions[j]), radius, MAROON);
          }
       }
-      }
+   }
 
-      { ZoneScopedN("Post-iteration work");
+   { ZoneScopedN("Post-iteration work");
 
       rlImGuiBegin();
 
@@ -300,51 +277,85 @@ int main(void)
       ImGui::End();
 
       {
-      ImGui::Begin("Matrix editor");
-      bool A_was_modified[4] = {false, false, false, false};
+         ImGui::Begin("Matrix editor");
+         bool A_was_modified[4] = {false, false, false, false};
 
-      ImGui::BeginTable("A", 2);
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
-      A_was_modified[0] = ImGui::SliderFloat("A11", &newAData[0], -20, 20);
-      ImGui::TableNextColumn();
-      A_was_modified[1] = ImGui::SliderFloat("A12", &newAData[2], -20, 20);
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
-      A_was_modified[2] = ImGui::SliderFloat("A21", &newAData[1], -20, 20);
-      ImGui::TableNextColumn();
-      A_was_modified[3] = ImGui::SliderFloat("A22", &newAData[3], -20, 20);
-      ImGui::EndTable();
+         ImGui::BeginTable("A", 2);
+         ImGui::TableNextRow();
+         ImGui::TableNextColumn();
+         A_was_modified[0] = ImGui::SliderFloat("A11", &newAData[0], -20, 20);
+         ImGui::TableNextColumn();
+         A_was_modified[1] = ImGui::SliderFloat("A12", &newAData[2], -20, 20);
+         ImGui::TableNextRow();
+         ImGui::TableNextColumn();
+         A_was_modified[2] = ImGui::SliderFloat("A21", &newAData[1], -20, 20);
+         ImGui::TableNextColumn();
+         A_was_modified[3] = ImGui::SliderFloat("A22", &newAData[3], -20, 20);
+         ImGui::EndTable();
 
-      Eigen eigen;
-      if (any(A_was_modified, 4))
-      {
-         for (int i = 0; i < 4; i += 1)
-            AData[i] = (f64) newAData[i];
-      }
+         Eigen eigen;
+         if (any(A_was_modified, 4))
+         {
+            for (int i = 0; i < 4; i += 1)
+               AData[i] = (f64) newAData[i];
+         }
 
-      eigen = decomposition(A);
+         eigen = decomposition(A);
 
-      ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
-            eigen.values[0].rl, eigen.values[0].im,
-            eigen.values[1].rl, eigen.values[1].im);
-      ImGui::Text("eigenvectors:\n[%f + %f i, %f + %f i]\n[%f + %f i, %f + %f i]",
-            eigen.vectors[0][0].rl, eigen.vectors[0][0].im,
-            eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
-            eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
-            eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
-      ImGui::End();
+         ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
+               eigen.values[0].rl, eigen.values[0].im,
+               eigen.values[1].rl, eigen.values[1].im);
+         ImGui::Text("eigenvectors:\n[%f + %f i, %f + %f i]\n[%f + %f i, %f + %f i]",
+               eigen.vectors[0][0].rl, eigen.vectors[0][0].im,
+               eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
+               eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
+               eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
+         ImGui::End();
       }
 
       rlImGuiEnd();
-      }
-
-      f64 t_frameend = GetTime();
-      f64 period = t_frameend - t_framestart;
-      prevframetime_ms = period * 1000;
-
-      EndDrawing();
    }
+
+   f64 t_frameend = GetTime();
+   f64 period = t_frameend - t_framestart;
+   prevframetime_ms = period * 1000;
+
+   EndDrawing();
+}
+
+int main(void)
+{
+   InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
+   SetTargetFPS(targetfps);
+   rlImGuiSetup(true);
+
+   for (int i = 0; i < numtrajectories; i++)
+      initTrajectory(&trajectories[i]);
+
+   t = 0;
+
+#ifdef JULIA_BACKEND
+   jl_init();
+   eval("include(\"source_code/compute.jl\")");
+
+   /* jl_value_t *jlVecF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 1); */
+   jl_value_t *jlMatF64type = jl_apply_array_type((jl_value_t *) jl_float64_type, 2);
+
+   x_jlarr = jl_alloc_array_2d(jlMatF64type, 2, numtrajectories);
+   currentstates = (f64 *) jl_array_data(x_jlarr);
+
+   A = jl_alloc_array_2d(jlMatF64type, 2, 2);
+   AData = (f64 *) jl_array_data(A);
+
+   JL_GC_PUSH2(&x_jlarr, &A);
+   solve_autonomous = getfunc("solve_autonomous");
+#else
+   AData = A.elems;
+#endif
+   resetstates((f64 *) currentstates);
+
+   while (!WindowShouldClose())   // Detect window close button or ESC key
+      gameloop();
 
    return 0;
 }
