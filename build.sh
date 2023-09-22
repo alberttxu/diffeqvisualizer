@@ -158,7 +158,7 @@ elif [ $1 = "tests" ]; then
 
 elif [ $1 = "web" ]; then
    CC=em++
-   CFLAGS="-D WEB -o main.html -s USE_GLFW=3 -s INITIAL_MEMORY=167772160"
+   CFLAGS="-D WEB -o index.html -s USE_GLFW=3 -s INITIAL_MEMORY=167772160"
    INCLUDES="\
    -I dependencies/raylib/src \
    -I libexec/emscripten/system/include \
@@ -186,3 +186,8 @@ fi
 set -xe
 
 $CC $CFLAGS $WARNINGS $INCLUDES source_code/main.cpp $LIBS
+
+# for itch.io
+if [ $1 = "web" ]; then
+   zip gamehtml.zip index.html main.js main.wasm
+fi

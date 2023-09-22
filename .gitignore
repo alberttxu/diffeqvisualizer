@@ -4,6 +4,7 @@ tests
 dependencies/TracyClient.o
 imgui.ini
 .cache/
-main.html
-main.js
-main.wasm
+index.html
+index.js
+index.wasm
+gamehtml.zip
