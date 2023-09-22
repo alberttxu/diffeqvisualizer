@@ -158,7 +158,7 @@ elif [ $1 = "tests" ]; then
 
 elif [ $1 = "web" ]; then
    CC=em++
-   CFLAGS="-D WEB -o index.html -s USE_GLFW=3 -s INITIAL_MEMORY=167772160"
+   CFLAGS="-D WEB -o index.html -s USE_GLFW=3"
    INCLUDES="\
    -I dependencies/raylib/src \
    -I libexec/emscripten/system/include \
