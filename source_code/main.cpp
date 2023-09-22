@@ -285,14 +285,15 @@ void gameloop()
    ImGui::BeginTable("A", 2);
    ImGui::TableNextRow();
    ImGui::TableNextColumn();
-   A_was_modified[0] = ImGui::SliderFloat("A11", &newAData[0], -20, 20);
+   f32 maxval = 5;
+   A_was_modified[0] = ImGui::SliderFloat("A11", &newAData[0], -maxval, maxval);
    ImGui::TableNextColumn();
-   A_was_modified[1] = ImGui::SliderFloat("A12", &newAData[2], -20, 20);
+   A_was_modified[1] = ImGui::SliderFloat("A12", &newAData[2], -maxval, maxval);
    ImGui::TableNextRow();
    ImGui::TableNextColumn();
-   A_was_modified[2] = ImGui::SliderFloat("A21", &newAData[1], -20, 20);
+   A_was_modified[2] = ImGui::SliderFloat("A21", &newAData[1], -maxval, maxval);
    ImGui::TableNextColumn();
-   A_was_modified[3] = ImGui::SliderFloat("A22", &newAData[3], -20, 20);
+   A_was_modified[3] = ImGui::SliderFloat("A22", &newAData[3], -maxval, maxval);
    ImGui::EndTable();
 
    Eigen eigen;
