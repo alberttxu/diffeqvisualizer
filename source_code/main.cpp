@@ -30,7 +30,7 @@
 #define targetperiod (1.0/(f64)targetfps)
 
 // zoom level
-int pixelsperunit = 100;
+int pixelsperunit = 20;
 
 // 0,0 = center of screen
 // +y = up
