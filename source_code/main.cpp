@@ -24,8 +24,8 @@
    #include "linearalgebra.cpp"
 #endif
 
-#define screenwidth 1618
-#define screenheight 1000
+#define screenwidth 800
+#define screenheight 600
 #define targetfps 62
 #define targetperiod (1.0/(f64)targetfps)
 
@@ -103,7 +103,7 @@ void drawcoordaxes()
 static inline
 void resetstates(f64 *arr_2xN)
 {
-   f64 boxlim = 40;
+   f64 boxlim = 20;
    for (int i = 0; i < numtrajectories; i += 1)
    {
       arr_2xN[2*i + 0] = randfloat64(-boxlim, boxlim);
