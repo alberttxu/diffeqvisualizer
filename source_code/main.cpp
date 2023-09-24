@@ -165,7 +165,7 @@ Vec2F64 currentstates[numtrajectories];
 Mat2x2F64 A;
 #endif
 f64 *AData;
-f32 newAData[4] = {0, 0, 0, 0};
+f32 newAData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
 f64 prevframetime_ms = 0;
 bool paused = false;
 bool resetwasclicked = false;
@@ -252,6 +252,7 @@ void gameloop()
 
    ImGui::Begin("Controls");
    resetwasclicked = ImGui::Button("reset");
+   ImGui::SameLine();
    if (resetwasclicked)
    {
       t = 0;
@@ -276,34 +277,20 @@ void gameloop()
       if (pausewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
          paused = true;
    }
-   ImGui::End();
 
-   {
-   ImGui::Begin("Matrix editor");
-   bool A_was_modified[4] = {false, false, false, false};
-
-   ImGui::BeginTable("A", 2);
-   ImGui::TableNextRow();
-   ImGui::TableNextColumn();
    f32 maxval = 5;
-   A_was_modified[0] = ImGui::SliderFloat("A11", &newAData[0], -maxval, maxval);
-   ImGui::TableNextColumn();
-   A_was_modified[1] = ImGui::SliderFloat("A12", &newAData[2], -maxval, maxval);
-   ImGui::TableNextRow();
-   ImGui::TableNextColumn();
-   A_was_modified[2] = ImGui::SliderFloat("A21", &newAData[1], -maxval, maxval);
-   ImGui::TableNextColumn();
-   A_was_modified[3] = ImGui::SliderFloat("A22", &newAData[3], -maxval, maxval);
-   ImGui::EndTable();
-
-   Eigen eigen;
-   if (any(A_was_modified, 4))
+   bool A_was_modified[2] = {false, false};
+   A_was_modified[0] = ImGui::SliderFloat2("a11, a12", newAData + 0, -maxval, maxval);
+   A_was_modified[1] = ImGui::SliderFloat2("a21, a22", newAData + 2, -maxval, maxval);
+   if (any(A_was_modified, 2))
    {
-      for (int i = 0; i < 4; i += 1)
-         AData[i] = (f64) newAData[i];
+      AData[0] = (f64) newAData[0];
+      AData[1] = (f64) newAData[2];
+      AData[2] = (f64) newAData[1];
+      AData[3] = (f64) newAData[3];
    }
 
-   eigen = decomposition(A);
+   Eigen eigen = decomposition(A);
 
    ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
          eigen.values[0].rl, eigen.values[0].im,
@@ -314,7 +301,6 @@ void gameloop()
          eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
          eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
    ImGui::End();
-   }
 
    rlImGuiEnd();
    }
