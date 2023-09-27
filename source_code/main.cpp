@@ -17,18 +17,17 @@
 
 // our code
 #include "useful_utils.cpp"
+#include "linearalgebra.cpp"
 #ifdef JULIA_BACKEND
    #include <julia.h>
    #include "julia_helpers.cpp"
-#else
-   #include "linearalgebra.cpp"
 #endif
 
-#define screenwidth 800
-#define screenheight 600
 #define targetfps 62
 #define targetperiod (1.0/(f64)targetfps)
 
+int screenwidth = 800;
+int screenheight = 600;
 // zoom level
 int pixelsperunit = 20;
 
@@ -178,6 +177,9 @@ void gameloop()
    static ImGuiIO& io = ImGui::GetIO();
    f64 t_framestart = GetTime();
 
+   screenwidth = GetScreenWidth();
+   screenheight = GetScreenHeight();
+
    if (IsKeyDown(KEY_LEFT_SUPER) && IsKeyDown(KEY_W))
       return;
 
@@ -314,6 +316,7 @@ void gameloop()
 
 int main(void)
 {
+   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
    rlImGuiSetup(true);
 

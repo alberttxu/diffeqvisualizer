@@ -161,7 +161,6 @@ elif [ $1 = "web" ]; then
    CFLAGS="-D WEB -o index.html -s USE_GLFW=3"
    INCLUDES="\
    -I dependencies/raylib/src \
-   -I libexec/emscripten/system/include \
    "
    LIBS="
    dependencies/raylib/src/rcore.o.wasm \
