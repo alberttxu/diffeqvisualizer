@@ -197,7 +197,7 @@ void gameloop()
       addstate(currentstates, newtrajidx, newcoords);
       newtrajidx = (newtrajidx + 1) % numtrajectories;
    }
-   else if (spawn_new_trajectories && framenumber % 5 == 0)
+   else if (!paused && spawn_new_trajectories && framenumber % 5 == 0)
    {
       Vec2F64 newcoords = { randfloat64(-boxlim, boxlim), randfloat64(-boxlim, boxlim) };
       initTrajectory(&trajectories[newtrajidx]);
