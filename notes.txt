@@ -1,11 +1,15 @@
-2023/08/16
+2023/09/29
+TODO:
+- We can show the eigenvectors as arrows starting from the origin.
+
+2023/09/16
 TODO for shipping to the web:
 - write our own linear algebra routines, and switch out the julia backend (in progress)
    - matrix exponential
    - eigen decomposition (TBD)
 - compile with emscripten or something else
 
-2023/08/10
+2023/09/10
 Putting on hold the eigenvalue editor for now.
 In order to ship (to the web), we need our own linear algebra routines for:
 - matrix exponential
@@ -17,7 +21,7 @@ Ideas for eigenvalue editor.
    - snap to real axis
 
 
-2023/08/10
+2023/09/10
 Dear ImGui is rendering incorrectly on my Macbook Pro 2015 Retina 15-inch, but not on my external monitors.
 Looks like high DPI is a common issue in other projects:
 - https://github.com/ocornut/imgui/issues/2816 (similar to what I'm seeing)
