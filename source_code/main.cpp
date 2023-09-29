@@ -98,11 +98,11 @@ void drawcoordaxes()
 }
 
 #define numtrajectories 100
+#define boxlim 20.0
 
 static inline
 void resetstates(f64 *arr_2xN)
 {
-   f64 boxlim = 20;
    for (int i = 0; i < numtrajectories; i += 1)
    {
       arr_2xN[2*i + 0] = randfloat64(-boxlim, boxlim);
@@ -170,10 +170,13 @@ bool paused = false;
 bool resetwasclicked = false;
 bool pausewasclicked = false;
 bool resumewasclicked = false;
+bool spawn_new_trajectories = false;
 
 void gameloop()
 {
    FrameMark;
+   static int framenumber = 0;
+   framenumber += 1;
    static ImGuiIO& io = ImGui::GetIO();
    f64 t_framestart = GetTime();
 
@@ -190,6 +193,13 @@ void gameloop()
    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse)
    {
       Vec2F64 newcoords = pixels2coords(GetMousePosition());
+      initTrajectory(&trajectories[newtrajidx]);
+      addstate(currentstates, newtrajidx, newcoords);
+      newtrajidx = (newtrajidx + 1) % numtrajectories;
+   }
+   else if (spawn_new_trajectories && framenumber % 5 == 0)
+   {
+      Vec2F64 newcoords = { randfloat64(-boxlim, boxlim), randfloat64(-boxlim, boxlim) };
       initTrajectory(&trajectories[newtrajidx]);
       addstate(currentstates, newtrajidx, newcoords);
       newtrajidx = (newtrajidx + 1) % numtrajectories;
@@ -279,6 +289,8 @@ void gameloop()
       if (pausewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
          paused = true;
    }
+   ImGui::SameLine();
+   ImGui::Checkbox("spawn new trajectories", &spawn_new_trajectories);
 
    f32 maxval = 5;
    bool A_was_modified[2] = {false, false};
