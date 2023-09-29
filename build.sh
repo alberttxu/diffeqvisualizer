@@ -158,7 +158,7 @@ elif [ $1 = "tests" ]; then
 
 elif [ $1 = "web" ]; then
    CC=em++
-   CFLAGS="-D WEB -o index.html -s USE_GLFW=3"
+   CFLAGS="-D WEB -o index.html -s USE_GLFW=3 --shell-file shell-minimal.html"
    INCLUDES="\
    -I dependencies/raylib/src \
    "
