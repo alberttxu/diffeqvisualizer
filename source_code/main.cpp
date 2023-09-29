@@ -171,6 +171,7 @@ bool resetwasclicked = false;
 bool pausewasclicked = false;
 bool resumewasclicked = false;
 bool spawn_new_trajectories = false;
+bool show_eigenvectors = true;
 
 void gameloop()
 {
@@ -239,7 +240,7 @@ void gameloop()
    ClearBackground(RAYWHITE);
    drawcoordaxes();
 
-   DrawText(TextFormat("Draw time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
+   DrawText(TextFormat("Frame time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
    DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
    DrawText(TextFormat("pixelsperunit = %d", pixelsperunit), 10, 70, 20, DARKGRAY);
 
@@ -256,6 +257,35 @@ void gameloop()
          DrawCircleV(coords2pixels(trajectory.recentpositions[j]), radius, MAROON);
       }
    }
+   }
+
+   Eigen eigen = decomposition(A);
+
+   // draw the real parts of the eigenvectors
+   if (show_eigenvectors)
+   {
+      float thickness = 3;
+      float lenscale = 1000;
+      Color v1color = eigen.values[0].rl > 0 ? GREEN : BLUE;
+      Color v2color = eigen.values[1].rl > 0 ? GREEN : BLUE;
+      DrawLineEx(
+         coords2pixels((Vector2){
+            (f32) eigen.vectors[0][0].rl * lenscale,
+            (f32) eigen.vectors[0][1].rl * lenscale}),
+         coords2pixels((Vector2){
+            (f32) -eigen.vectors[0][0].rl * lenscale,
+            (f32) -eigen.vectors[0][1].rl * lenscale}),
+         thickness,
+         v1color);
+      DrawLineEx(
+         coords2pixels((Vector2){
+            (f32) eigen.vectors[1][0].rl * lenscale,
+            (f32) eigen.vectors[1][1].rl * lenscale}),
+         coords2pixels((Vector2){
+            (f32) -eigen.vectors[1][0].rl * lenscale,
+            (f32) -eigen.vectors[1][1].rl * lenscale}),
+         thickness,
+         v2color);
    }
 
    { ZoneScopedN("Post-iteration work");
@@ -289,8 +319,8 @@ void gameloop()
       if (pausewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
          paused = true;
    }
-   ImGui::SameLine();
    ImGui::Checkbox("spawn new trajectories", &spawn_new_trajectories);
+   ImGui::Checkbox("show eigenvectors", &show_eigenvectors);
 
    f32 maxval = 5;
    bool A_was_modified[2] = {false, false};
@@ -303,8 +333,6 @@ void gameloop()
       AData[2] = (f64) newAData[1];
       AData[3] = (f64) newAData[3];
    }
-
-   Eigen eigen = decomposition(A);
 
    ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
          eigen.values[0].rl, eigen.values[0].im,
