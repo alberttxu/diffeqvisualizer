@@ -170,7 +170,7 @@ bool paused = false;
 bool resetwasclicked = false;
 bool pausewasclicked = false;
 bool resumewasclicked = false;
-bool spawn_new_trajectories = false;
+bool spawn_new_trajectories = true;
 bool show_eigenvectors = true;
 
 void gameloop()
