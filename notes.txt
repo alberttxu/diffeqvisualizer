@@ -1,3 +1,15 @@
+2023/10/16
+TODO:
+- embed png images as c source code to work around the itch.io path issue
+- add examples to demonstrate applications of linear ODEs
+   - show how a 2nd order ODE is converted into a 1st order ODE; companion matrix form
+   - harmonic oscillators: damped spring, rlc circuit; https://en.wikipedia.org/wiki/Harmonic_oscillator
+   - time varying dynamics: https://en.wikipedia.org/wiki/Hill_differential_equation
+- implement dynamics with control input: i.e. x' = Ax + Bu
+   - update associated examples for non-homogeneous 2nd order ODEs
+- dynamically expand canvas to fill the page
+- implement a custom immediate-mode gui that supports touchscreen devices
+
 2023/09/29
 TODO:
 - We can show the eigenvectors as arrows starting from the origin.
