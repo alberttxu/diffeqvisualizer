@@ -188,5 +188,6 @@ $CC $CFLAGS $WARNINGS $INCLUDES source_code/main.cpp $LIBS
 
 # for itch.io
 if [ $1 = "web" ]; then
-   zip gamehtml.zip index.html index.js index.wasm
+   rm -rf gamehtml.zip
+   zip -r gamehtml.zip index.html index.js index.wasm assets/
 fi
