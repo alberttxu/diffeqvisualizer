@@ -116,3 +116,6 @@ bool any(bool *arr, int n)
    }
    return false;
 }
+
+// https://stackoverflow.com/a/34135270
+#define arrlen(arr) ((int) (sizeof (arr) / sizeof (arr)[0]))

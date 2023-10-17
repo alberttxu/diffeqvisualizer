@@ -14,7 +14,9 @@ img = load(imgpath)
 imgname = split(basename(imgpath), ".")[1]
 outputfile = open("$(imgname).c", "w")
 
-write(outputfile, "unsigned char img[$(size(img)[1])][$(4 * size(img)[2])] = {\n")
+numrows = size(img)[1]
+numcols = 4 * size(img)[2]
+write(outputfile, "unsigned char $imgname[$numrows][$numcols] = {\n")
 
 for i in 1:size(img)[1]
     write(outputfile, "{")

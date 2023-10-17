@@ -357,20 +357,26 @@ void gameloop()
    EndDrawing();
 }
 
+#define USE_C_IMG
+
+#ifndef USE_C_IMG
 #include <unistd.h>
 #include <dirent.h>
+#else
+#include "../assets/xdoteqAx.c"
+#endif
 
 int main(void)
 {
+   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+   InitWindow(screenwidth, screenheight, "diffeqvisualizer");
+   rlImGuiSetup(true);
+
    {
+#ifndef USE_C_IMG
       char cwd[200];
       if (getcwd(cwd, sizeof(cwd)) != NULL)
           printf("Current working dir: %s\n", cwd);
-
-      if (access("assets/", F_OK) != 0)
-      {
-         puts("assets folder was not found");
-      }
 
       puts("==== files in the current directory ====");
       DIR *d;
@@ -383,13 +389,26 @@ int main(void)
          closedir(d);
       }
       puts("================");
+
+      if (access("assets/", F_OK) != 0)
+      {
+         puts("assets folder was not found");
+      }
+      equation_texture = LoadTexture("assets/xdoteqAx.png");
+
+#else
+      Image equation_img;
+      equation_img.data = xdoteqAx;
+      equation_img.width = arrlen(xdoteqAx[0]) / 4;
+      equation_img.height = arrlen(xdoteqAx);
+      equation_img.mipmaps = 1;
+      equation_img.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+      showptr(equation_img.data);
+      showint(equation_img.width);
+      showint(equation_img.height);
+      equation_texture = LoadTextureFromImage(equation_img);
+#endif
    }
-
-   SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-   InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
-   rlImGuiSetup(true);
-
-   equation_texture = LoadTexture("assets/xdoteqAx.png");
 
    for (int i = 0; i < numtrajectories; i++)
       initTrajectory(&trajectories[i]);
