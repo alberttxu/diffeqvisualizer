@@ -172,6 +172,7 @@ bool pausewasclicked = false;
 bool resumewasclicked = false;
 bool spawn_new_trajectories = true;
 bool show_eigenvectors = true;
+Texture2D equation_texture;
 
 void gameloop()
 {
@@ -198,7 +199,7 @@ void gameloop()
       addstate(currentstates, newtrajidx, newcoords);
       newtrajidx = (newtrajidx + 1) % numtrajectories;
    }
-   else if (!paused && spawn_new_trajectories && framenumber % 5 == 0)
+   else if (!paused && spawn_new_trajectories && framenumber % 3 == 0)
    {
       Vec2F64 newcoords = { randfloat64(-boxlim, boxlim), randfloat64(-boxlim, boxlim) };
       initTrajectory(&trajectories[newtrajidx]);
@@ -347,6 +348,8 @@ void gameloop()
    rlImGuiEnd();
    }
 
+   DrawTexture(equation_texture, 250, 30, WHITE);
+
    f64 t_frameend = GetTime();
    f64 period = t_frameend - t_framestart;
    prevframetime_ms = period * 1000;
@@ -354,11 +357,39 @@ void gameloop()
    EndDrawing();
 }
 
+#include <unistd.h>
+#include <dirent.h>
+
 int main(void)
 {
+   {
+      char cwd[200];
+      if (getcwd(cwd, sizeof(cwd)) != NULL)
+          printf("Current working dir: %s\n", cwd);
+
+      if (access("assets/", F_OK) != 0)
+      {
+         puts("assets folder was not found");
+      }
+
+      puts("==== files in the current directory ====");
+      DIR *d;
+      struct dirent *dir;
+      d = opendir(".");
+      if (d) {
+         while ((dir = readdir(d)) != NULL) {
+            printf("%s\n", dir->d_name);
+         }
+         closedir(d);
+      }
+      puts("================");
+   }
+
    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
    InitWindow(screenwidth, screenheight, "raylib [core] example - keyboard input");
    rlImGuiSetup(true);
+
+   equation_texture = LoadTexture("assets/xdoteqAx.png");
 
    for (int i = 0; i < numtrajectories; i++)
       initTrajectory(&trajectories[i]);
