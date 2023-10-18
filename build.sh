@@ -184,8 +184,7 @@ fi
 
 set -xe
 
-# $CC $CFLAGS $WARNINGS $INCLUDES source_code/main.cpp $LIBS
-$CC $CFLAGS $WARNINGS $INCLUDES source_code/main2.cpp $LIBS
+$CC $CFLAGS $WARNINGS $INCLUDES source_code/main.cpp $LIBS
 
 # for itch.io
 if [ $1 = "web" ]; then
