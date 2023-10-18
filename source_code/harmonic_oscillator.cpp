@@ -8,17 +8,21 @@ void gameloop_oscillator()
    DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
    DrawText(TextFormat("pixelsperunit = %d", pixelsperunit), 10, 70, 20, DARKGRAY);
 
-   static Vec2F64 currentstate = {0, 0};
-
    constexpr f32 groundY_pix = 500;
    constexpr f32 wallX_pix = 50;
-   constexpr int pixelspermeter = 100;
+   constexpr int pixelspermeter = 50;
    constexpr f32 groundwidth_m = 8;
    constexpr f32 wallheight_m = 3;
    constexpr f32 boxsize_m = 1;
+   constexpr f32 maxdisp = 0.5f * groundwidth_m - 0.5f * boxsize_m;
 
-   static f32 equilibrium_pos_m = groundwidth_m / 2;
-   static f32 box_pos_m = equilibrium_pos_m;
+   static f32 disp_m = 0;
+   static Vec2F64 currentstate = {0, 0};
+   static f32 boxMass_kg = 0.5;
+   static f32 k_springconstant = 5;
+   // helper variables for drawing
+   static f32 eq_distfromwall_m = groundwidth_m / 2;
+   static f32 box_distfromwall_m = eq_distfromwall_m;
 
    DrawLineEx(
          (Vector2){wallX_pix, groundY_pix - wallheight_m * pixelspermeter},
@@ -30,33 +34,33 @@ void gameloop_oscillator()
    ImGui::Begin("Box");
 
    bool boxwasmoved = ImGui::SliderFloat(
-         "box position",
-         &box_pos_m,
-         0.5f * boxsize_m,
-         groundwidth_m - 0.5f * boxsize_m);
+         "equilib. displacement",
+         &disp_m,
+         -maxdisp,
+         maxdisp);
+   currentstate.elems[0] = disp_m;
+   box_distfromwall_m = eq_distfromwall_m + disp_m;
 
-   currentstate.elems[0] = box_pos_m - equilibrium_pos_m;
+   bool masswaschanged = ImGui::SliderFloat("mass, kg", &boxMass_kg, 0.01, 5);
+   bool kwaschanged = ImGui::SliderFloat("k_spring", &k_springconstant, 0, 20);
 
-   if (boxwasmoved)
+   if (boxwasmoved || masswaschanged || kwaschanged)
    {
       paused = true;
       currentstate.elems[1] = 0;
    }
 
+   // draw box
    DrawRectangleLinesEx(
          (Rectangle){
-            wallX_pix + (box_pos_m - 0.5f * boxsize_m) * pixelspermeter,
+            wallX_pix + (box_distfromwall_m - 0.5f * boxsize_m) * pixelspermeter,
             groundY_pix - boxsize_m * pixelspermeter,
             boxsize_m * pixelspermeter,
             boxsize_m * pixelspermeter},
          4,
          BLUE);
 
-   static f32 boxMass_kg = 0.5;
-   static f32 k_springconstant = 5;
-   ImGui::SliderFloat("mass, kg", &boxMass_kg, 0.01, 5);
-   ImGui::SliderFloat("k_spring", &k_springconstant, 0, 20);
-   DrawCircleV(coords2pixels(currentstate), 3, MAROON);
+   DrawCircleV(coords2pixels(currentstate), 6, MAROON);
 
    Mat2x2F64 A = {0, -k_springconstant / boxMass_kg, 1, 0};
    Eigen eigen = decomposition(A);
@@ -75,6 +79,8 @@ void gameloop_oscillator()
    ImGuiIO& io = ImGui::GetIO();
    if (paused)
    {
+      t = 0;
+
       DrawText("Paused", screenwidth - 100, 20, 20, DARKGRAY);
       resumewasclicked = ImGui::Button("resume");
       if (resumewasclicked || (IsKeyPressed(KEY_SPACE) && !io.WantCaptureKeyboard))
@@ -83,7 +89,7 @@ void gameloop_oscillator()
    else
    {
       currentstate = newstate;
-      box_pos_m = newstate.elems[0] + equilibrium_pos_m;
+      disp_m = newstate.elems[0];
       t += dt;
 
       pausewasclicked = ImGui::Button("pause");
