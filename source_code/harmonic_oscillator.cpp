@@ -38,10 +38,10 @@ void gameloop_oscillator()
          &disp_m,
          -maxdisp,
          maxdisp);
-   currentstate.elems[0] = disp_m;
+   currentstate.elems[0] = (f64) disp_m;
    box_distfromwall_m = eq_distfromwall_m + disp_m;
 
-   bool masswaschanged = ImGui::SliderFloat("mass, kg", &boxMass_kg, 0.01, 5);
+   bool masswaschanged = ImGui::SliderFloat("mass, kg", &boxMass_kg, 0.01f, 5);
    bool kwaschanged = ImGui::SliderFloat("k_spring", &k_springconstant, 0, 20);
 
    if (boxwasmoved || masswaschanged || kwaschanged)
@@ -59,10 +59,46 @@ void gameloop_oscillator()
             boxsize_m * pixelspermeter},
          4,
          BLUE);
+   // draw spring
+   constexpr f32 springwidth_m = 0.2f;
+   constexpr int numlinks = 10;
+   f32 springlength = box_distfromwall_m - 0.5f * boxsize_m;
+   f32 linklength = springlength / numlinks;
+   for (int i = 0; i < numlinks; i += 1)
+   {
+      f32 xstart_m = i * linklength;
+      f32 xend_m = (i+1) * linklength;
+      f32 node1_m = xstart_m + (1/4.0f) * linklength;
+      f32 node2_m = xstart_m + (2/4.0f) * linklength;
+      f32 node3_m = xstart_m + (3/4.0f) * linklength;
+
+      f32 y = groundY_pix - 0.5f * boxsize_m * pixelspermeter;
+      f32 h = springwidth_m * pixelspermeter;
+      DrawLineEx(
+            (Vector2){wallX_pix + xstart_m * pixelspermeter, y},
+            (Vector2){wallX_pix + node1_m * pixelspermeter, y - h},
+            3,
+            BLACK);
+      DrawLineEx(
+            (Vector2){wallX_pix + node1_m * pixelspermeter, y - h},
+            (Vector2){wallX_pix + node2_m * pixelspermeter, y},
+            3,
+            BLACK);
+      DrawLineEx(
+            (Vector2){wallX_pix + node2_m * pixelspermeter, y},
+            (Vector2){wallX_pix + node3_m * pixelspermeter, y + h},
+            3,
+            BLACK);
+      DrawLineEx(
+            (Vector2){wallX_pix + node3_m * pixelspermeter, y + h},
+            (Vector2){wallX_pix + xend_m * pixelspermeter, y},
+            3,
+            BLACK);
+   }
 
    DrawCircleV(coords2pixels(currentstate), 6, MAROON);
 
-   Mat2x2F64 A = {0, -k_springconstant / boxMass_kg, 1, 0};
+   Mat2x2F64 A = {0, (f64) -k_springconstant / (f64)boxMass_kg, 1, 0};
    Eigen eigen = decomposition(A);
    Vec2F64 newstate = matvecmul(expm(dt * A), currentstate);
 
@@ -89,7 +125,7 @@ void gameloop_oscillator()
    else
    {
       currentstate = newstate;
-      disp_m = newstate.elems[0];
+      disp_m = (f32) newstate.elems[0];
       t += dt;
 
       pausewasclicked = ImGui::Button("pause");
