@@ -20,6 +20,7 @@ void gameloop_oscillator()
    static Vec2F64 currentstate = {0, 0};
    static f32 boxMass_kg = 0.5;
    static f32 k_springconstant = 5;
+   static f32 k_friction = 1;
    // helper variables for drawing
    static f32 eq_distfromwall_m = groundwidth_m / 2;
    static f32 box_distfromwall_m = eq_distfromwall_m;
@@ -42,9 +43,10 @@ void gameloop_oscillator()
    box_distfromwall_m = eq_distfromwall_m + disp_m;
 
    bool masswaschanged = ImGui::SliderFloat("mass, kg", &boxMass_kg, 0.01f, 5);
-   bool kwaschanged = ImGui::SliderFloat("k_spring", &k_springconstant, 0, 20);
+   bool kspringwaschanged = ImGui::SliderFloat("k_spring", &k_springconstant, 0, 20);
+   bool kfrictionwaschanged = ImGui::SliderFloat("k_friction", &k_friction, 0, 5);
 
-   if (boxwasmoved || masswaschanged || kwaschanged)
+   if (boxwasmoved || masswaschanged || kspringwaschanged || kfrictionwaschanged)
    {
       paused = true;
       currentstate.elems[1] = 0;
@@ -98,7 +100,7 @@ void gameloop_oscillator()
 
    DrawCircleV(coords2pixels(currentstate), 6, MAROON);
 
-   Mat2x2F64 A = {0, (f64) -k_springconstant / (f64)boxMass_kg, 1, 0};
+   Mat2x2F64 A = {0, (f64) -k_springconstant / (f64)boxMass_kg, 1, (f64) -k_friction / (f64)boxMass_kg};
    Eigen eigen = decomposition(A);
    Vec2F64 newstate = matvecmul(expm(dt * A), currentstate);
 
