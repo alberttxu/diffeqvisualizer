@@ -1,11 +1,12 @@
 \documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
 \usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
-\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ...
 %\geometry{landscape}                		% Activate for rotated page geometry
 %\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
 \usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
-								% TeX will automatically convert eps --> pdf in pdflatex		
+								% TeX will automatically convert eps --> pdf in pdflatex
 \usepackage{amssymb}
+\usepackage{hyperref}
 
 \usepackage[scaled]{helvet}
 \usepackage[T1]{fontenc}
@@ -17,26 +18,32 @@
 \begin{document}
 \maketitle
 
+I'm developing an application to visualize differential equations - \url{https://github.com/alberttxu/diffeqvisualizer}.
+The purpose of this app is to help students understand what a differential equation means,
+since many college courses don't provide much intuition.
+This document explains the mathematical methods used in the demo examples in the app.
+
 \section{Intro}
-%\subsection{}
 
 A differential equation describes a function in terms of its derivatives.
 For example, the linear differential equation
-$$ \dot{x} = Ax $$
-means that a function $x(t)$ must equal its derivative $\dot{x}(t) = \frac{dx}{dt}$ when multiplied by $A$.
-Here, linear means $\dot{x}$ is expressed in terms of multiplications and additions of $x$.
-In other words, there are no $x^2$ or $\sqrt{x}$ terms, additional constant terms, etc.
-
+\begin{equation}
+\dot{x} = Ax
+\end{equation}
+says that a function $x(t)$ must equal its derivative $\dot{x}(t) = \frac{dx}{dt}$ when multiplied by $A$.
+The word linear means $\dot{x}$ is expressed in terms of multiplications and additions of $x$.
+Basically, there are no $x^2$ or $\sqrt{x}$ terms, additional constant terms, etc.
 More generally a differential equation is defined as $\dot{x} = f(x)$,
-but for now we only analyze the linear case.
+but for now we only analyze the linear case.  \\
 
+\noindent
 Some important notes:
 \begin{itemize}
   \item There are many possible solutions for a differential equation (DE).
-  In the equation $\dot{x} = Ax$, $x$ refers to any solution, not necessarily a specific one.
+  In equation (1), $x$ refers to any solution, not necessarily a specific one.
   \item For most complicated DEs there is no closed-form expression that can describe all possible solutions.
   \item For a particular (i.e. specific) solution $x(t)$, it is useful to think of $x$ not as a function, but as some quantity at time $t$ in a simulation.
-  \item Example: $x$ represents the location of an object, and $\dot{x}$ represents its velocity.
+    \subitem Example: $x$ represents the location of an object, and $\dot{x}$ represents its velocity.
   \item For a particular solution $x(t)$, the set of its past values is sometimes called a trajectory.
   \item The study of a particular solution with a starting value $x_\mathrm{initial}$ at $t = 0$ is called an initial value problem.
 \end{itemize}
@@ -56,14 +63,40 @@ If $x > 0$ the trajectory will move to the right, and if $x < 0$ it will move to
 If $A < 0$ then trajectories will move towards the origin using similar logic.
 
 All 3 cases can be described using the general-form solution
-$$ x(t) = ce^{tA} . $$
-However, a particular solution has the form
-$$ x_\mathrm{part}(t) = x_\mathrm{initial} e^{tA} , $$
+\begin{equation}
+x(t) = ce^{tA} .
+\end{equation}
+However, for a particular $x(t)$ its solution is
+\begin{equation}
+x(t) = x_\mathrm{initial} e^{tA}
+\end{equation}
 because $x_\mathrm{initial}$ uniquely determines $c$.
 
 
 \section{2D case}
 
+Higher dimensional linear DEs are also known as linear dynamical systems.
 This is much more interesting since there are numerous ways a 2D point can move relative to the origin.
+An excellent course on this topic is taught at Stanford here: \url{https://see.stanford.edu/Course/EE263}.
+
+I believe it is very hard to understand the dynamics here without a graphical application.
+And so I encourage the reader to play around with the elements of $A$ to see how it affects the motion of trajectories.
+In the rest of this section I won't go into troublesome formulas and derivations like in most college courses,
+and instead only mention basic definitions and notation required to understand this section.
+
+In 2 dimensions, $x$ and $\dot{x}$ are vectors with 2 components (a.k.a elements, entries), and $A$ is a 2x2 matrix.
+We don't need fancy LaTeX to emphasize that $A$, $x$, and $\dot{x}$ are not scalars.
+Equation (1),
+$$ \dot{x} = Ax ,$$
+still has the same meaning as before.
+Here we can imagine that $x$ represents a particle's position in a 2D plane,
+and $\dot{x}$ represents the direction (velocity) that the particle is traveling.
+$A$ is a map from position to velocity: for a particle at position $x$, its velocity must equal $Ax$ regardless of time $t$.
+
+The components of a $x$ describe its location along individual axes.
+For example, $x_1$ is the particle's location along the horizontal axis,
+and $x_2$ is its location along the vertical axis.
+Likewise $\dot{x}_1$ and $\dot{x}_2$ represent individual velocity components.
+
 
 \end{document}
