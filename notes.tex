@@ -1,0 +1,69 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+
+\usepackage[scaled]{helvet}
+\usepackage[T1]{fontenc}
+\renewcommand\familydefault{\sfdefault}
+
+\title{Linear differential equations}
+\author{Albert Xu}
+
+\begin{document}
+\maketitle
+
+\section{Intro}
+%\subsection{}
+
+A differential equation describes a function in terms of its derivatives.
+For example, the linear differential equation
+$$ \dot{x} = Ax $$
+means that a function $x(t)$ must equal its derivative $\dot{x}(t) = \frac{dx}{dt}$ when multiplied by $A$.
+Here, linear means $\dot{x}$ is expressed in terms of multiplications and additions of $x$.
+In other words, there are no $x^2$ or $\sqrt{x}$ terms, additional constant terms, etc.
+
+More generally a differential equation is defined as $\dot{x} = f(x)$,
+but for now we only analyze the linear case.
+
+Some important notes:
+\begin{itemize}
+  \item There are many possible solutions for a differential equation (DE).
+  In the equation $\dot{x} = Ax$, $x$ refers to any solution, not necessarily a specific one.
+  \item For most complicated DEs there is no closed-form expression that can describe all possible solutions.
+  \item For a particular (i.e. specific) solution $x(t)$, it is useful to think of $x$ not as a function, but as some quantity at time $t$ in a simulation.
+  \item Example: $x$ represents the location of an object, and $\dot{x}$ represents its velocity.
+  \item For a particular solution $x(t)$, the set of its past values is sometimes called a trajectory.
+  \item The study of a particular solution with a starting value $x_\mathrm{initial}$ at $t = 0$ is called an initial value problem.
+\end{itemize}
+
+
+\section{1D case}
+
+This is the simplest case: $A$, $x$, and $\dot{x}$ are numbers.
+We'll explain the possible solutions using a simple example: $x$ is the location of some point on a number line and $\dot{x}$ is its velocity.
+
+If $A = 0$ then $\dot{x} = 0$, which means velocity is zero for all $x$.
+For any initial value of $x$, its trajectory never moves.
+
+If $A > 0$ then trajectories will move away from the origin, since $\dot{x}$ is proportional to $x$ with positive feedback.
+If $x > 0$ the trajectory will move to the right, and if $x < 0$ it will move to the left.
+
+If $A < 0$ then trajectories will move towards the origin using similar logic.
+
+All 3 cases can be described using the general-form solution
+$$ x(t) = ce^{tA} . $$
+However, a particular solution has the form
+$$ x_\mathrm{part}(t) = x_\mathrm{initial} e^{tA} , $$
+because $x_\mathrm{initial}$ uniquely determines $c$.
+
+
+\section{2D case}
+
+This is much more interesting since there are numerous ways a 2D point can move relative to the origin.
+
+\end{document}
