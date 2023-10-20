@@ -10,4 +10,8 @@ index.wasm
 gamehtml.zip
 notes.aux
 notes.log
+notes.pdf
+notes.out
+notes.fls
+notes.fdb_latexmk
 notes.synctex.gz
