@@ -21,7 +21,7 @@
 I'm developing an application to visualize differential equations - \url{https://github.com/alberttxu/diffeqvisualizer}.
 The purpose of this app is to help students understand what a differential equation means,
 since many college courses don't provide much intuition.
-This document explains the mathematical methods used in the demo examples in the app.
+This document covers the mathematics used in the app's demo examples.
 
 \section{Intro}
 
@@ -37,7 +37,7 @@ More generally a differential equation is defined as $\dot{x} = f(x)$,
 but for now we only analyze the linear case.  \\
 
 \noindent
-Some important notes:
+Important notes:
 \begin{itemize}
   \item There are many possible solutions for a differential equation (DE).
   In equation (1), $x$ refers to any solution, not necessarily a specific one.
@@ -57,46 +57,91 @@ We'll explain the possible solutions using a simple example: $x$ is the location
 If $A = 0$ then $\dot{x} = 0$, which means velocity is zero for all $x$.
 For any initial value of $x$, its trajectory never moves.
 
-If $A > 0$ then trajectories will move away from the origin, since $\dot{x}$ is proportional to $x$ with positive feedback.
-If $x > 0$ the trajectory will move to the right, and if $x < 0$ it will move to the left.
+If $A > 0$ then trajectories will move away from the origin.
+Since $\dot{x}$ is proportional to $x$,
+if $x > 0$ the trajectory will move further to the right, and if $x < 0$ it will move further to the left.
 
-If $A < 0$ then trajectories will move towards the origin using similar logic.
+If $A < 0$ then trajectories will shrink towards the origin using similar logic.
 
 All 3 cases can be described using the general-form solution
 \begin{equation}
 x(t) = ce^{tA} .
 \end{equation}
-However, for a particular $x(t)$ its solution is
+However, for a particular $x_\mathrm{part}(t)$ its solution is
 \begin{equation}
-x(t) = x_\mathrm{initial} e^{tA}
+x_\mathrm{part}(t) = x_\mathrm{initial} e^{tA}
 \end{equation}
-because $x_\mathrm{initial}$ uniquely determines $c$.
+since $x_\mathrm{initial}$ uniquely determines $c$.
 
 
 \section{2D case}
 
-Higher dimensional linear DEs are also known as linear dynamical systems.
 This is much more interesting since there are numerous ways a 2D point can move relative to the origin.
-An excellent course on this topic is taught at Stanford here: \url{https://see.stanford.edu/Course/EE263}.
-
-I believe it is very hard to understand the dynamics here without a graphical application.
+I believe it is very hard to understand the dynamics in this case without a graphical application.
 And so I encourage the reader to play around with the elements of $A$ to see how it affects the motion of trajectories.
 In the rest of this section I won't go into troublesome formulas and derivations like in most college courses,
 and instead only mention basic definitions and notation required to understand this section.
+Higher dimensional linear DEs are also known as linear dynamical systems.
+An excellent course on this topic is taught at Stanford: \url{https://see.stanford.edu/Course/EE263}.
+And for those who want a quick infographic,
+\url{https://en.wikipedia.org/wiki/Stability_theory} has content that supplements the basics covered here,
+although in my opinion the language is a bit dense. \\
 
-In 2 dimensions, $x$ and $\dot{x}$ are vectors with 2 components (a.k.a elements, entries), and $A$ is a 2x2 matrix.
-We don't need fancy LaTeX to emphasize that $A$, $x$, and $\dot{x}$ are not scalars.
+In 2 dimensions, $x$ and $\dot{x}$ are vectors with 2 components (a.k.a elements, entries), and $A$ is a $2\times 2$ matrix.
+I won't use fancy LaTeX to emphasize that $A$, $x$, and $\dot{x}$ are not scalars.
 Equation (1),
 $$ \dot{x} = Ax ,$$
 still has the same meaning as before.
-Here we can imagine that $x$ represents a particle's position in a 2D plane,
-and $\dot{x}$ represents the direction (velocity) that the particle is traveling.
+We can imagine that $x$ represents a particle's position in a 2D plane,
+and $\dot{x}$ represents its direction of travel (velocity).
 $A$ is a map from position to velocity: for a particle at position $x$, its velocity must equal $Ax$ regardless of time $t$.
 
-The components of a $x$ describe its location along individual axes.
-For example, $x_1$ is the particle's location along the horizontal axis,
-and $x_2$ is its location along the vertical axis.
+The components of $x$ describe its location along individual axes.
+For example, $x_1$ is the particle's location in the horizontal direction,
+and $x_2$ is its location in the vertical direction.
 Likewise $\dot{x}_1$ and $\dot{x}_2$ represent individual velocity components.
 
+If you play around with the entries of $A$ you will see several kinds of behavior:
+rotation;
+scaling;
+moving away from or towards the origin;
+asymptotically approaching seemingly arbitrary axes;
+and more.
+Here is a screenshot I've taken of the Trajectories demo below.
+
+\graphicspath{ {./assets/} }
+\includegraphics[scale=0.3]{screenshot_trajectories}
+
+Each red comet is a trajectory.
+The tail of each trajectory is drawn by creating cirlces for its most recent values.
+You may notice that the trajectories seem to move towards the origin when they are near the blue line,
+and are repelled away from the origin near the green line.
+This is not a coincidence and it has to do with the eigenvectors of $A$.
+
+An eigenvector of a square matrix, $A$ for example, is a vector $v$ that satisfies the condition
+\begin{equation}
+Av = \lambda v
+\end{equation}
+for some $\lambda$.
+In the context of our linear DE, $\dot{x} = Ax$, if a trajectory $v$ is an eigenvector of $A$ then
+$$ \dot{v} = Av = \lambda v $$
+which is actually the 1D case for each component,
+i.e. $\dot{v}_1 = \lambda v_1$, $\dot{v}_2 = \lambda v_2$.
+Graphically this means that $v$'s velocity either points directly towards the origin or directly away from it.
+And therefore $v$ may shrink or diverge from the origin, but its angle never changes.
+Just like in the 1D case, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to divergence.
+$\lambda$ is called the eigenvalue associated with the eigenvector $v$. \\
+
+\noindent
+Important notes:
+\begin{itemize}
+\item Any scaled version of $v$ is also an eigenvector of $A$.
+The line spanned by $v$ is sometimes called the "eigenspace" associated with $\lambda$, but this terminology is not universally standard.
+\item For an $n\times n$ matrix, there are $n$ eigenvector-eigenvalue pairs, but the eigenvalues are not always unique.
+Conventional notation in many fields denotes $ v_1,\cdots,v_n $ as eigenvectors of a matrix $A$.
+Sometimes this may be confusing since subscripts are also used to refer to the ith element of a vector.
+\end{itemize}
+
+What if a trajectory $x$ is not an eigenvector of $A$?
 
 \end{document}
