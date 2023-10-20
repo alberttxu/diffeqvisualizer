@@ -12,13 +12,15 @@
 \usepackage[T1]{fontenc}
 \renewcommand\familydefault{\sfdefault}
 
+\usepackage{parskip}
+
 \title{Linear differential equations}
 \author{Albert Xu}
 
 \begin{document}
 \maketitle
 
-I'm developing an application to visualize differential equations - \url{https://github.com/alberttxu/diffeqvisualizer}.
+I'm developing an application to \href{https://github.com/alberttxu/diffeqvisualizer}{visualize differential equations}.
 The purpose of this app is to help students understand what a differential equation means,
 since many college courses don't provide much intuition.
 This document covers the mathematics used in the app's demo examples.
@@ -34,9 +36,8 @@ says that a function $x(t)$ must equal its derivative $\dot{x}(t) = \frac{dx}{dt
 The word linear means $\dot{x}$ is expressed in terms of multiplications and additions of $x$.
 Basically, there are no $x^2$ or $\sqrt{x}$ terms, additional constant terms, etc.
 More generally a differential equation is defined as $\dot{x} = f(x)$,
-but for now we only analyze the linear case.  \\
+but for now we only analyze the linear case.
 
-\noindent
 Important notes:
 \begin{itemize}
   \item There are many possible solutions for a differential equation (DE).
@@ -51,10 +52,12 @@ Important notes:
 
 \section{1D case}
 
-This is the simplest case: $A$, $x$, and $\dot{x}$ are numbers.
-We'll explain the possible solutions using a simple example: $x$ is the location of some point on a number line and $\dot{x}$ is its velocity.
+We want to solve equation (1),
+$$\dot{x} = Ax,$$
+where $A$, $x$, and $\dot{x}$ are numbers.
+Let's use a simple example: $x$ is the location of a particle on a number line and $\dot{x}$ is its velocity.
 
-If $A = 0$ then $\dot{x} = 0$, which means velocity is zero for all $x$.
+If $A = 0$ then $\dot{x} = 0$, i.e. velocity is zero for all $x$.
 For any initial value of $x$, its trajectory never moves.
 
 If $A > 0$ then trajectories will move away from the origin.
@@ -63,15 +66,17 @@ if $x > 0$ the trajectory will move further to the right, and if $x < 0$ it will
 
 If $A < 0$ then trajectories will shrink towards the origin using similar logic.
 
-All 3 cases can be described using the general-form solution
+All 3 cases can be described using the general-form solution,
 \begin{equation}
 x(t) = ce^{tA} .
 \end{equation}
-However, for a particular $x_\mathrm{part}(t)$ its solution is
+However, for a specific particle, its solution is
 \begin{equation}
-x_\mathrm{part}(t) = x_\mathrm{initial} e^{tA}
+x(t) = x_\mathrm{initial} e^{tA}
 \end{equation}
 since $x_\mathrm{initial}$ uniquely determines $c$.
+Fun fact: this is the same formula used in finance, \url{https://en.wikipedia.org/wiki/Compound_interest#Continuous_compounding}.
+More on this later.
 
 
 \section{2D case}
@@ -85,7 +90,7 @@ Higher dimensional linear DEs are also known as linear dynamical systems.
 An excellent course on this topic is taught at Stanford: \url{https://see.stanford.edu/Course/EE263}.
 And for those who want a quick infographic,
 \url{https://en.wikipedia.org/wiki/Stability_theory} has content that supplements the basics covered here,
-although in my opinion the language is a bit dense. \\
+although in my opinion the language is a bit dense.
 
 In 2 dimensions, $x$ and $\dot{x}$ are vectors with 2 components (a.k.a elements, entries), and $A$ is a $2\times 2$ matrix.
 I won't use fancy LaTeX to emphasize that $A$, $x$, and $\dot{x}$ are not scalars.
@@ -110,7 +115,10 @@ and more.
 Here is a screenshot I've taken of the Trajectories demo below.
 
 \graphicspath{ {./assets/} }
-\includegraphics[scale=0.3]{screenshot_trajectories}
+\begin{figure}[h]
+\includegraphics[scale=0.31]{screenshot_trajectories}
+\caption{trajectory dynamics of $\dot{x} = Ax$, a.k.a phase space}
+\end{figure}
 
 Each red comet is a trajectory.
 The tail of each trajectory is drawn by creating cirlces for its most recent values.
@@ -124,15 +132,16 @@ Av = \lambda v
 \end{equation}
 for some $\lambda$.
 In the context of our linear DE, $\dot{x} = Ax$, if a trajectory $v$ is an eigenvector of $A$ then
-$$ \dot{v} = Av = \lambda v $$
-which is actually the 1D case for each component,
+\begin{equation}
+\dot{v} = Av = \lambda v
+\end{equation}
+which is actually the 1D case in each component,
 i.e. $\dot{v}_1 = \lambda v_1$, $\dot{v}_2 = \lambda v_2$.
 Graphically this means that $v$'s velocity either points directly towards the origin or directly away from it.
 And therefore $v$ may shrink or diverge from the origin, but its angle never changes.
 Just like in the 1D case, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to divergence.
-$\lambda$ is called the eigenvalue associated with the eigenvector $v$. \\
+$\lambda$ is called the eigenvalue associated with the eigenvector $v$.
 
-\noindent
 Important notes:
 \begin{itemize}
 \item Any scaled version of $v$ is also an eigenvector of $A$.
@@ -143,5 +152,51 @@ Sometimes this may be confusing since subscripts are also used to refer to the i
 \end{itemize}
 
 What if a trajectory $x$ is not an eigenvector of $A$?
+We can deconstruct $x$ as a linear combination of eigenvectors.
+That is to say, we can find some scaled eigenvectors $v_1$ and $v_2$ that satisfy
+\begin{equation}
+x = v_1 + v_2
+\end{equation}
+and now it becomes clear how to analyze the trajectory's behavior.
+Again, in the context of our linear DE, $\dot{x} = Ax$, we plug in $x$ and get
+\begin{equation}
+\dot{x} = Ax
+= A(v_1 + v_2)
+= A v_1 + A v_2
+= \lambda_1 v_1 + \lambda_2 v_2
+\end{equation}
+However, we already know that
+$$ \dot{v}_1 = A v_1 = \lambda_1 v_1 $$
+$$ \dot{v}_2 = A v_2 = \lambda_2 v_2 $$
+with solutions
+$$ v_1(t) = v_{1,\mathrm{initial}} e^{t\lambda_1} $$
+$$ v_2(t) = v_{2,\mathrm{initial}} e^{t\lambda_2} $$
+
+Let's pause for a second and think about what this implies.
+It means that we can independently compute the solutions for each eigenvector and sum the results to get the solution for x.
+Hopefully now it is clear what is happening in Figure 1.
+The eigenvectors of $A$ lie on the blue and green lines.
+Each trajectory has components in the blue and green directions.
+Eigenvectors on the blue line have a negative eigenvalue, and eigenvectors on the green line have a positive eigenvalue.
+
+You might wonder if we can reuse the formula from the 1D solution (equation 3).
+\begin{equation}
+x(t) = e^{tA} x_\mathrm{initial}
+\end{equation}
+Due to syntactial reasons we have to swap the order of symbols on the right.
+$x(t)$ and $x_\mathrm{initial}$ are vectors, so the term $e^{tA}$ must either be a scalar or a $2\times 2$ matrix.
+Spoiler: it's the latter, and the formula is indeed valid in 2 dimensions,
+but we need to extend the definition of the exponential function for a square matrix $A$.
+This is called a matrix exponential, but what does it do?
+And how does this method compare to the previous one we just analyzed?
+Gilbert Strang at MIT gives some good examples in this \href{https://youtu.be/LwSk9M5lJx4}{youtube video},
+so I won't regurgitate them here.
+But I will emphasize what the matrix exponential actually does: it \textbf{acts as a time travel operator}.
+Given an initial condition $x_\mathrm{initial} = x(0)$, we can compute a trajectory's future value $x(t)$ for any $t$.
+Furthermore, given a trajectory's current value $x_\mathrm{current} = x(t)$, we can compute its past value $dt$ seconds \textit{ago}.
+\begin{equation}
+x(t-dt) = e^{-dtA} x_\mathrm{current}
+\end{equation}
+3Blue1Brown also has an entire \href{https://youtu.be/O85OWBJ2ayo}{video} dedicated to the matrix exponential and its applications.
 
 \end{document}
