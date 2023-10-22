@@ -35,8 +35,8 @@ For example, the linear differential equation
 says that a function $x(t)$ must equal its derivative $\dot{x}(t) = \frac{dx}{dt}$ when multiplied by $A$.
 The word linear means $\dot{x}$ is expressed in terms of multiplications and additions of $x$.
 Basically, there are no $x^2$ or $\sqrt{x}$ terms, additional constant terms, etc.
-More generally a differential equation is defined as $\dot{x} = f(x)$,
-but for now we only analyze the linear case.
+More generally, a differential equation is defined as $\dot{x} = f(x)$,
+but for now we will analyze the linear case.
 
 Important notes:
 \begin{itemize}
@@ -75,8 +75,9 @@ However, for a specific particle, its solution is
 x(t) = x_\mathrm{initial} e^{tA}
 \end{equation}
 since $x_\mathrm{initial}$ uniquely determines $c$.
-Fun fact: this is the same formula used in finance, \url{https://en.wikipedia.org/wiki/Compound_interest#Continuous_compounding}.
-More on this later.
+\begin{itemize}
+  \item Fun fact: this is the same formula used in \href{https://en.wikipedia.org/wiki/Compound_interest#Continuous_compounding}{compound interest}
+\end{itemize}
 
 
 \section{2D case}
@@ -126,6 +127,8 @@ You may notice that the trajectories seem to move towards the origin when they a
 and are repelled away from the origin near the green line.
 This is not a coincidence and it has to do with the eigenvectors of $A$.
 
+\subsection*{Special solution - eigenvector}
+
 An eigenvector of a square matrix, $A$ for example, is a vector $v$ that satisfies the condition
 \begin{equation}
 Av = \lambda v
@@ -136,24 +139,29 @@ In the context of our linear DE, $\dot{x} = Ax$, if a trajectory $v$ is an eigen
 \dot{v} = Av = \lambda v
 \end{equation}
 which is actually the 1D case in each component,
-i.e. $\dot{v}_1 = \lambda v_1$, $\dot{v}_2 = \lambda v_2$.
-Graphically this means that $v$'s velocity either points directly towards the origin or directly away from it.
-And therefore $v$ may shrink or diverge from the origin, but its angle never changes.
-Just like in the 1D case, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to divergence.
+i.e. $\dot{v}_\mathrm{horiz} = \lambda v_\mathrm{horiz}$, $\dot{v}_\mathrm{vert} = \lambda v_\mathrm{vert}$.
+Visually this means that $v$ moves either directly towards or away from the origin.
+And therefore it may grow or shrink, but cannot rotate - its angle never changes.
+Just like in the 1D case, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to growth.
 $\lambda$ is called the eigenvalue associated with the eigenvector $v$.
 
 Important notes:
 \begin{itemize}
 \item Any scaled version of $v$ is also an eigenvector of $A$.
+Therefore grammatically it is more correct to say $v$ is \textit{an} (instead of \textit{the}) eigenvector associated with $\lambda$.
 The line spanned by $v$ is sometimes called the "eigenspace" associated with $\lambda$, but this terminology is not universally standard.
-\item For an $n\times n$ matrix, there are $n$ eigenvector-eigenvalue pairs, but the eigenvalues are not always unique.
-Conventional notation in many fields denotes $ v_1,\cdots,v_n $ as eigenvectors of a matrix $A$.
-Sometimes this may be confusing since subscripts are also used to refer to the ith element of a vector.
+\item For an $n\times n$ matrix, there are $n$ eigenvector-eigenvalue pairs. However, the eigenvalues are not always distinct.
+\item Conventional notation in many fields denotes eigenvectors as $v_i$ using subscripts.
+For example: "\textit{Let $ v_1,\cdots,v_n $ be eigenvectors of $A$ with eigenvalues $ \lambda_1,\cdots,\lambda_n $}."
+Sometimes this may be confusing since subscripts are also commonly used to refer to scalar elements of vectors.
+Be mindful of literary context.
 \end{itemize}
 
+\subsection*{General solution}
+
 What if a trajectory $x$ is not an eigenvector of $A$?
-We can deconstruct $x$ as a linear combination of eigenvectors.
-That is to say, we can find some scaled eigenvectors $v_1$ and $v_2$ that satisfy
+The key insight is that we can break $x$ into pieces which \textit{are} eigenvectors.
+That is to say, we can find some scaled eigenvectors $v_1$ and $v_2$ of $A$ that satisfy
 \begin{equation}
 x = v_1 + v_2
 \end{equation}
@@ -173,11 +181,12 @@ $$ v_1(t) = v_{1,\mathrm{initial}} e^{t\lambda_1} $$
 $$ v_2(t) = v_{2,\mathrm{initial}} e^{t\lambda_2} $$
 
 Let's pause for a second and think about what this implies.
-It means that we can independently compute the solutions for each eigenvector and sum the results to get the solution for x.
+It means that we can independently compute the trajectories for each eigenvector and add them to get the solution for $x$.
 Hopefully now it is clear what is happening in Figure 1.
 The eigenvectors of $A$ lie on the blue and green lines.
 Each trajectory has components in the blue and green directions.
 Eigenvectors on the blue line have a negative eigenvalue, and eigenvectors on the green line have a positive eigenvalue.
+So over time, the blue component of $x$ shrinks and the green component of $x$ grows.
 
 You might wonder if we can reuse the formula from the 1D solution (equation 3).
 \begin{equation}
@@ -187,16 +196,22 @@ Due to syntactial reasons we have to swap the order of symbols on the right.
 $x(t)$ and $x_\mathrm{initial}$ are vectors, so the term $e^{tA}$ must either be a scalar or a $2\times 2$ matrix.
 Spoiler: it's the latter, and the formula is indeed valid in 2 dimensions,
 but we need to extend the definition of the exponential function for a square matrix $A$.
-This is called a matrix exponential, but what does it do?
-And how does this method compare to the previous one we just analyzed?
-Gilbert Strang at MIT gives some good examples in this \href{https://youtu.be/LwSk9M5lJx4}{youtube video},
+This is called the matrix exponential, but how exactly is it defined?
+And how does this method compare to the one we just analyzed?
+Gilbert Strang at MIT gives some good answers in this \href{https://youtu.be/LwSk9M5lJx4}{youtube video},
 so I won't regurgitate them here.
 But I will emphasize what the matrix exponential actually does: it \textbf{acts as a time travel operator}.
-Given an initial condition $x_\mathrm{initial} = x(0)$, we can compute a trajectory's future value $x(t)$ for any $t$.
-Furthermore, given a trajectory's current value $x_\mathrm{current} = x(t)$, we can compute its past value $dt$ seconds \textit{ago}.
+Given an initial condition $x_\mathrm{initial} = x(0)$, we can compute a trajectory's future value $x(t)$ for any $t$ (equation 8).
+Furthermore, given a trajectory's current value $x_\mathrm{current} = x(t)$, we can compute its past value $dt$ seconds \textit{ago}:
 \begin{equation}
 x(t-dt) = e^{-dtA} x_\mathrm{current}
 \end{equation}
-3Blue1Brown also has an entire \href{https://youtu.be/O85OWBJ2ayo}{video} dedicated to the matrix exponential and its applications.
+
+See also:
+\begin{itemize}
+\item 3Blue1Brown has an entire \href{https://youtu.be/O85OWBJ2ayo}{video} dedicated to the matrix exponential.
+\item \href{https://www.youtube.com/watch?v=5ePa2UOkEV0&list=PL06960BA52D0DB32B}{Lecture 11} in Professor Boyd's EE263 class
+(an essential class for engineering students)
+\end{itemize}
 
 \end{document}
