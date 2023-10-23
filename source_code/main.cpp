@@ -101,6 +101,7 @@ int framenumber = 0;
 
 #include "trajectories.cpp"
 #include "harmonic_oscillator.cpp"
+#include "one_dimension.cpp"
 
 void gameloop()
 {
@@ -124,14 +125,20 @@ void gameloop()
    ClearBackground(RAYWHITE);
 
    ImGui::Begin("Examples");
-   const char* examples[] = {"Trajectories", "Harmonic oscillator"};
-   static int example_idx = 0;
-   ImGui::Combo("Example", &example_idx, examples, IM_ARRAYSIZE(examples));
+   const char* examples[] = {
+      "1-D",
+      "Trajectories (2-D)",
+      "Harmonic oscillator",
+   };
+   static int example_idx = 1;
+   ImGui::Combo("Demo", &example_idx, examples, IM_ARRAYSIZE(examples));
    ImGui::End();
 
    if (example_idx == 0)
-      gameloop_trajectories();
+      gameloop_onedim();
    else if (example_idx == 1)
+      gameloop_trajectories();
+   else if (example_idx == 2)
       gameloop_oscillator();
 
    f64 t_frameend = GetTime();
