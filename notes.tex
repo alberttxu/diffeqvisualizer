@@ -14,6 +14,8 @@
 
 \usepackage{parskip}
 
+\graphicspath{ {./assets/} }
+
 \title{Linear differential equations}
 \author{Albert Xu}
 
@@ -29,7 +31,7 @@ This document covers the mathematics used in the app's demo examples.
 
 A differential equation describes a function in terms of its derivatives.
 For example, the linear differential equation
-\begin{equation}
+\begin{equation} \label{eq:xdoteqAx}
 \dot{x} = Ax
 \end{equation}
 says that a function $x(t)$ must equal its derivative $\dot{x}(t) = \frac{dx}{dt}$ when multiplied by $A$.
@@ -41,7 +43,7 @@ but for now we will analyze the linear case.
 Important notes:
 \begin{itemize}
   \item There are many possible solutions for a differential equation (DE).
-  In equation (1), $x$ refers to any solution, not necessarily a specific one.
+  In equation \ref{eq:xdoteqAx}, $x$ refers to any solution, not necessarily a specific one.
   \item For most complicated DEs there is no closed-form expression that can describe all possible solutions.
   \item For a particular (i.e. specific) solution $x(t)$, it is useful to think of $x$ not as a function, but as some quantity at time $t$ in a simulation.
     \subitem Example: $x$ represents the location of an object, and $\dot{x}$ represents its velocity.
@@ -50,9 +52,9 @@ Important notes:
 \end{itemize}
 
 
-\section{1D case}
+\section{1-D case}
 
-We want to solve equation (1),
+We want to solve equation \ref{eq:xdoteqAx},
 $$\dot{x} = Ax,$$
 where $A$, $x$, and $\dot{x}$ are numbers.
 Let's use a simple example: $x$ is the location of a particle on a number line and $\dot{x}$ is its velocity.
@@ -71,18 +73,18 @@ All 3 cases can be described using the general-form solution,
 x(t) = ce^{tA} .
 \end{equation}
 However, for a specific particle, its solution is
-\begin{equation}
+\begin{equation} \label{eq:1Dsol}
 x(t) = x_\mathrm{initial} e^{tA}
 \end{equation}
 since $x_\mathrm{initial}$ uniquely determines $c$.
 \begin{itemize}
-  \item Fun fact: this is the same formula used in \href{https://en.wikipedia.org/wiki/Compound_interest#Continuous_compounding}{compound interest}
+  \item Fun fact: this is the same formula used in
+  \href{https://en.wikipedia.org/wiki/Compound_interest#Continuous_compounding}{compound interest}.
 \end{itemize}
 
+\section{2-D case}
 
-\section{2D case}
-
-This is much more interesting since there are numerous ways a 2D point can move relative to the origin.
+This is much more interesting since there are numerous ways a 2-D point can move relative to the origin.
 I believe it is very hard to understand the dynamics in this case without a graphical application.
 And so I encourage the reader to play around with the elements of $A$ to see how it affects the motion of trajectories.
 In the rest of this section I won't go into troublesome formulas and derivations like in most college courses,
@@ -95,10 +97,10 @@ although in my opinion the language is a bit dense.
 
 In 2 dimensions, $x$ and $\dot{x}$ are vectors with 2 components (a.k.a elements, entries), and $A$ is a $2\times 2$ matrix.
 I won't use fancy LaTeX to emphasize that $A$, $x$, and $\dot{x}$ are not scalars.
-Equation (1),
+Equation \ref{eq:xdoteqAx},
 $$ \dot{x} = Ax ,$$
 still has the same meaning as before.
-We can imagine that $x$ represents a particle's position in a 2D plane,
+We can imagine that $x$ represents a particle's position in a 2-D plane,
 and $\dot{x}$ represents its direction of travel (velocity).
 $A$ is a map from position to velocity: for a particle at position $x$, its velocity must equal $Ax$ regardless of time $t$.
 
@@ -115,10 +117,11 @@ asymptotically approaching seemingly arbitrary axes;
 and more.
 Here is a screenshot I've taken of the Trajectories demo below.
 
-\graphicspath{ {./assets/} }
 \begin{figure}[h]
+\centering
 \includegraphics[scale=0.31]{screenshot_trajectories}
 \caption{trajectory dynamics of $\dot{x} = Ax$, a.k.a phase space}
+\label{fig:Trajectories}
 \end{figure}
 
 Each red comet is a trajectory.
@@ -138,11 +141,11 @@ In the context of our linear DE, $\dot{x} = Ax$, if a trajectory $v$ is an eigen
 \begin{equation}
 \dot{v} = Av = \lambda v
 \end{equation}
-which is actually the 1D case in each component,
+which is actually the 1-D case in each component,
 i.e. $\dot{v}_\mathrm{horiz} = \lambda v_\mathrm{horiz}$, $\dot{v}_\mathrm{vert} = \lambda v_\mathrm{vert}$.
 Visually this means that $v$ moves either directly towards or away from the origin.
 And therefore it may grow or shrink, but cannot rotate - its angle never changes.
-Just like in the 1D case, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to growth.
+Just like in the 1-D case, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to growth.
 $\lambda$ is called the eigenvalue associated with the eigenvector $v$.
 
 Important notes:
@@ -182,13 +185,13 @@ $$ v_2(t) = v_{2,\mathrm{initial}} e^{t\lambda_2} $$
 
 Let's pause for a second and think about what this implies.
 It means that we can independently compute the trajectories for each eigenvector and add them to get the solution for $x$.
-Hopefully now it is clear what is happening in Figure 1.
+Hopefully now it is clear what is happening in Figure \ref{fig:Trajectories}.
 The eigenvectors of $A$ lie on the blue and green lines.
 Each trajectory has components in the blue and green directions.
 Eigenvectors on the blue line have a negative eigenvalue, and eigenvectors on the green line have a positive eigenvalue.
 So over time, the blue component of $x$ shrinks and the green component of $x$ grows.
 
-You might wonder if we can reuse the formula from the 1D solution (equation 3).
+You might wonder if we can reuse the formula from the 1-D solution (equation \ref{eq:1Dsol}).
 \begin{equation}
 x(t) = e^{tA} x_\mathrm{initial}
 \end{equation}
@@ -213,5 +216,53 @@ See also:
 \item \href{https://www.youtube.com/watch?v=5ePa2UOkEV0&list=PL06960BA52D0DB32B}{Lecture 11} in Professor Boyd's EE263 class
 (an essential class for engineering students)
 \end{itemize}
+
+
+\section{Applications}
+\subsection*{Harmonic oscillator}
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{boxspring}
+\caption{Box attached to a wall by a spring}
+\label{fig:BoxSpring}
+\end{figure}
+
+Figure \ref{fig:BoxSpring} shows a box resting at equilibrium.
+We would like to analyze the motion of the box if we were to shift it away from equilibrium and then let go.
+Let's define our coordinate system with $x = 0$ at the equilibrium position, and $x > 0$ going to the right.
+($x$ represents the location of box's center).
+
+We know from Newton's 2nd law that
+\begin{equation} \label{eq:newton2ndlaw}
+m \ddot{x} = \sum F_i
+\end{equation}
+where $F_i$ is any (horizontal) force acting on the box, $m$ is the mass of the box, and $\ddot{x}$ is its acceleration.
+We don't include vertical forces since we're analyzing horizontal motion.
+There are only 2 forces in this case: the force from the spring, and a friction force from the ground.
+The spring force is
+\begin{equation}
+-k_\mathrm{spring} x
+\end{equation}
+where $k_\mathrm{spring}$ is a stiffness coefficient.
+The spring force always acts towards equilibrium.
+The friction force is
+\begin{equation}
+-k_\mathrm{friction} \dot{x}
+\end{equation}
+where $k_\mathrm{friction}$ is called the viscous damping coefficient, and $\dot{x}$ is the box's velocity.
+The term viscous is used in fluid dynamics, but its the same idea here.
+Friction always acts against the direction of velocity because it is a drag force.
+With these 2 forces, equation \ref{eq:newton2ndlaw} becomes
+\begin{equation} \label{eq:boxeq}
+m \ddot{x} =
+-k_\mathrm{friction} \dot{x}
+-k_\mathrm{spring} x
+\end{equation}
+We have not seen this form before.
+The $\ddot{x}$ (2nd derivative) term makes this a 2nd-order equation whereas $\dot{x} = Ax$ is a 1st-order equation, so it looks like we are stuck.
+The question is whether it is possible to convert equation \ref{eq:boxeq} into the form $\dot{x} = Ax$.
+At this point, many instructors will pull a "trick", and arrive at some set of scalar 1st-order equations without explaining why it works.
+
 
 \end{document}
