@@ -7,6 +7,7 @@
 								% TeX will automatically convert eps --> pdf in pdflatex
 \usepackage{amssymb}
 \usepackage{hyperref}
+\usepackage{amsmath}
 
 \usepackage[scaled]{helvet}
 \usepackage[T1]{fontenc}
@@ -262,7 +263,95 @@ m \ddot{x} =
 We have not seen this form before.
 The $\ddot{x}$ (2nd derivative) term makes this a 2nd-order equation whereas $\dot{x} = Ax$ is a 1st-order equation, so it looks like we are stuck.
 The question is whether it is possible to convert equation \ref{eq:boxeq} into the form $\dot{x} = Ax$.
-At this point, many instructors will pull a "trick", and arrive at some set of scalar 1st-order equations without explaining why it works.
+At this point, some lecturers will pull a "trick", and arrive at a new set of equations without explaining why it works.
+I'll explain the general method and then apply it to our box-spring system.
 
+\subsubsection*{Converting a higher-order DE to 1st order}
+
+In this subsection $x$ is used in a general context and does not refer to the box's location.
+We want to convert a general $n$-th order linear DE of the form
+\begin{equation} \label{eq:nthOrderDE}
+k_n x^{(n)}
++ k_{n-1} x^{(n-1)}
++ \cdots
++ k_{1} \dot{x}
++ k_{0} x
+= 0
+\end{equation}
+to the familiar linear DE, $\dot{x} = Ax$.
+The notation $x^{(i)}$ represents the $i$th derivative of $x(t)$ and is equivalent to the dot notation.
+The key "trick" here is called a \textbf{change of variables}.
+We will declare a new vector variable which contains all of the higher derivatives,
+and this new variable will satisfy $\dot{x} = Ax$.
+Allow me to explain.
+
+Let's declare a variable, $z$, and set it equal to
+\begin{align}
+z &= \begin{bmatrix}
+        x \\
+        \dot{x} \\
+        \vdots \\
+        x^{(n-2)} \\
+        x^{(n-1)} \\
+      \end{bmatrix}
+\end{align}
+Then $\dot{z}$ is equal to
+\begin{align}
+\dot{z} &= \begin{bmatrix}
+        \dot{x} \\
+        \ddot{x} \\
+        \vdots \\
+        x^{(n-1)} \\
+        x^{(n)} \\
+      \end{bmatrix}
+\end{align}
+which in terms of $z$ is
+\begin{align}
+\dot{z} &= \begin{bmatrix}
+        \dot{x} \\
+        \ddot{x} \\
+        \vdots \\
+        x^{(n-1)} \\
+        x^{(n)} \\
+      \end{bmatrix}
+  =
+      \begin{bmatrix}
+        0 & 1 & 0 & \dots & 0 \\
+        0 & 0 & 1 & \dots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & 0 & \dots  & 1 \\
+        \frac{-k_0}{k_n} & \frac{-k_1}{k_n} & \dots & \frac{-k_{n-2}}{k_n} & \frac{-k_{n-1}}{k_n}
+      \end{bmatrix}
+      \begin{bmatrix}
+        x \\
+        \dot{x} \\
+        \vdots \\
+        x^{(n-2)} \\
+        x^{(n-1)} \\
+      \end{bmatrix}
+  = Az
+\end{align}
+which is the form $\dot{z} = Az$.
+In the first $n-1$ rows of $A$ there is a $1$ located after the diagonal position.
+This is a consequence of how we defined $z$ --- the $i$th element of $\dot{z}$ equals the $i+1$th element of $z$.
+In the $n$th (last) row the coefficients are the result of isolating $x^{(n)}$ from equation \ref{eq:nthOrderDE} to the left-hand side.
+A matrix with this type of pattern is called a companion matrix.
+
+Applying this method to our box-spring system (eq. \ref{eq:boxeq}) we get
+\begin{align}
+\begin{bmatrix}
+        \dot{x} \\
+        \ddot{x} \\
+      \end{bmatrix}
+  =
+      \begin{bmatrix}
+        0 & 1 \\
+        \frac{-k_\mathrm{spring}}{m} & \frac{-k_\mathrm{friction}}{m}
+      \end{bmatrix}
+      \begin{bmatrix}
+        x \\
+        \dot{x} \\
+      \end{bmatrix}
+\end{align}
 
 \end{document}
