@@ -4,7 +4,7 @@ void gameloop_oscillator()
 {
    drawcoordaxes();
 
-   DrawText(TextFormat("Frame time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
+   DrawText(TextFormat("Frame time: %02.02f ms", drawtime_ms), 10, 50, 20, DARKGRAY);
    DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
 
    constexpr f32 groundY_pix = 500;

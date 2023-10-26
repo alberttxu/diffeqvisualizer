@@ -18,6 +18,8 @@
 // our code
 #include "useful_utils.cpp"
 #include "linearalgebra.cpp"
+#include "game_data.cpp"
+
 #ifdef JULIA_BACKEND
    #include <julia.h>
    #include "julia_helpers.cpp"
@@ -97,8 +99,6 @@ void drawcoordaxes()
    }
 }
 
-int framenumber = 0;
-
 #include "trajectories.cpp"
 #include "harmonic_oscillator.cpp"
 #include "one_dimension.cpp"
@@ -108,6 +108,7 @@ void gameloop()
    FrameMark;
    framenumber += 1;
    f64 t_framestart = GetTime();
+   dt = t_framestart - t_prevframe;
 
    screenwidth = GetScreenWidth();
    screenheight = GetScreenHeight();
@@ -141,9 +142,8 @@ void gameloop()
    else if (example_idx == 2)
       gameloop_oscillator();
 
-   f64 t_frameend = GetTime();
-   f64 period = t_frameend - t_framestart;
-   prevframetime_ms = period * 1000;
+   drawtime_ms = (GetTime() - t_framestart) * 1000;
+   t_prevframe = t_framestart;
 
    rlImGuiEnd();
    EndDrawing();

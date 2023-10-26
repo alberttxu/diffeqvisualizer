@@ -52,11 +52,8 @@ void addstate(Vec2F64 *currentstates, int idx, Vec2F64 newtrajectorycoords)
 }
 #endif
 
-// Game data
 Trajectory trajectories[numtrajectories];
 int newtrajidx = 0;
-f64 t = 0;
-#define dt 0.02
 #ifdef JULIA_BACKEND
 f64 *currentstates;
 jl_array_t *A;
@@ -68,14 +65,8 @@ Mat2x2F64 A;
 #endif
 f64 *AData;
 f32 newAData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
-f64 prevframetime_ms = 0;
-bool paused = false;
-bool resetwasclicked = false;
-bool pausewasclicked = false;
-bool resumewasclicked = false;
 bool spawn_new_trajectories = true;
 bool show_eigenvectors = true;
-Texture2D equation_texture;
 
 void gameloop_trajectories()
 {
@@ -127,7 +118,7 @@ void gameloop_trajectories()
 
    drawcoordaxes();
 
-   DrawText(TextFormat("Frame time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
+   DrawText(TextFormat("Frame time: %02.02f ms", drawtime_ms), 10, 50, 20, DARKGRAY);
    DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
 
    { ZoneScopedN("draw trajectories");

@@ -25,7 +25,7 @@ void gameloop_onedim()
       DrawText("0", x0 - 4, y0 + ticklen + 10, 20, DARKGRAY);
    }
 
-   DrawText(TextFormat("Frame time: %02.02f ms", prevframetime_ms), 10, 50, 20, DARKGRAY);
+   DrawText(TextFormat("Frame time: %02.02f ms", drawtime_ms), 10, 50, 20, DARKGRAY);
    DrawText(TextFormat("t = %f", t), 10, 30, 20, DARKGRAY);
    DrawTexture(equation_texture, 250, 30, WHITE);
 
