@@ -1,6 +1,6 @@
 #pragma once
 
-#define numtrajectories 100
+#define numtrajectories 500
 #define boxlim 20.0
 
 static inline
@@ -34,6 +34,28 @@ void updateposition(Trajectory *t, Vec2F64 position)
    t->curidx = (t->curidx + 1) % histcapacity;
    t->size = min(histcapacity, t->size + 1);
 }
+
+Vec2F64 getRecentPos(Trajectory t, int ago)
+{
+   assert(ago < t.size);
+   int idx = t.curidx - 1 - ago;
+   if (idx < 0)
+      idx += histcapacity;
+   return t.recentpositions[idx];
+}
+
+Vec2F64 getMostRecentPos(Trajectory t)
+{
+   assert(t.size > 0);
+   return getRecentPos(t, 0);
+}
+
+Vec2F64 getLeastRecentPos(Trajectory t)
+{
+   assert(t.size > 0);
+   return getRecentPos(t, t.size - 1);
+}
+
 
 #ifdef JULIA_BACKEND
 static inline
@@ -125,13 +147,15 @@ void gameloop_trajectories()
    for (int i = 0; i < numtrajectories; i++)
    {
       Trajectory trajectory = trajectories[i];
-      for (int ago = 0; ago < trajectory.size; ago++)
+
+      Vector2 points[histcapacity];
+      for (int i = 0; i < trajectory.size; i += 1)
       {
-         f32 radius = 3.0f - 0.1f * ago;
-         int j = trajectory.curidx - 1 - ago;
-         if (j < 0)
-            j += histcapacity;
-         DrawCircleV(coords2pixels(trajectory.recentpositions[j]), radius, MAROON);
+         points[i] = coords2pixels(getRecentPos(trajectory, i));
+      }
+      for (int i = 0; i < trajectory.size - 1; i += 1)
+      {
+         DrawLineEx(points[i], points[i + 1], 2, MAROON);
       }
    }
    }
