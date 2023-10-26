@@ -103,7 +103,7 @@ $$ \dot{x} = Ax ,$$
 still has the same meaning as before.
 We can imagine that $x$ represents a particle's position in a 2-D plane,
 and $\dot{x}$ represents its direction of travel (velocity).
-$A$ is a map from position to velocity: for a particle at position $x$, its velocity must equal $Ax$ regardless of time $t$.
+$A$ is a map from position to velocity: for a particle at position $x$, its velocity must equal $Ax$ regardless of the time $t$.
 
 The components of $x$ describe its location along individual axes.
 For example, $x_1$ is the particle's location in the horizontal direction,
@@ -112,9 +112,9 @@ Likewise $\dot{x}_1$ and $\dot{x}_2$ represent individual velocity components.
 
 If you play around with the entries of $A$ you will see several kinds of behavior:
 rotation;
-scaling;
-moving away from or towards the origin;
-asymptotically approaching seemingly arbitrary axes;
+shrinking;
+expanding;
+approaching seemingly arbitrary axes;
 and more.
 Here is a screenshot I've taken of the Trajectories demo below.
 
@@ -153,10 +153,10 @@ Important notes:
 \begin{itemize}
 \item Any scaled version of $v$ is also an eigenvector of $A$.
 Therefore grammatically it is more correct to say $v$ is \textit{an} (instead of \textit{the}) eigenvector associated with $\lambda$.
-The line spanned by $v$ is sometimes called the "eigenspace" associated with $\lambda$, but this terminology is not universally standard.
+The line spanned by $v$ is sometimes called the ``eigenspace'' associated with $\lambda$, but this terminology is not universally standard.
 \item For an $n\times n$ matrix, there are $n$ eigenvector-eigenvalue pairs. However, the eigenvalues are not always distinct.
 \item Conventional notation in many fields denotes eigenvectors as $v_i$ using subscripts.
-For example: "\textit{Let $ v_1,\cdots,v_n $ be eigenvectors of $A$ with eigenvalues $ \lambda_1,\cdots,\lambda_n $}."
+For example: ``\textit{Let $ v_1,\cdots,v_n $ be eigenvectors of $A$ with eigenvalues $ \lambda_1,\cdots,\lambda_n $}.''
 Sometimes this may be confusing since subscripts are also commonly used to refer to scalar elements of vectors.
 Be mindful of literary context.
 \end{itemize}
@@ -263,10 +263,10 @@ m \ddot{x} =
 We have not seen this form before.
 The $\ddot{x}$ (2nd derivative) term makes this a 2nd-order equation whereas $\dot{x} = Ax$ is a 1st-order equation, so it looks like we are stuck.
 The question is whether it is possible to convert equation \ref{eq:boxeq} into the form $\dot{x} = Ax$.
-At this point, some lecturers will pull a "trick", and arrive at a new set of equations without explaining why it works.
+At this point, some lecturers will pull a ``trick'', and arrive at a new set of equations without explaining why it works.
 I'll explain the general method and then apply it to our box-spring system.
 
-\subsubsection*{Converting a higher-order DE to 1st order}
+\subsubsection*{Converting from higher order to 1st order}
 
 In this subsection $x$ is used in a general context and does not refer to the box's location.
 We want to convert a general $n$-th order linear DE of the form
@@ -278,9 +278,9 @@ k_n x^{(n)}
 + k_{0} x
 = 0
 \end{equation}
-to the familiar linear DE, $\dot{x} = Ax$.
+to the familiar form $\dot{x} = Ax$.
 The notation $x^{(i)}$ represents the $i$th derivative of $x(t)$ and is equivalent to the dot notation.
-The key "trick" here is called a \textbf{change of variables}.
+The key ``trick'' here is called a \textbf{change of variables}.
 We will declare a new vector variable which contains all of the higher derivatives,
 and this new variable will satisfy $\dot{x} = Ax$.
 Allow me to explain.
@@ -319,7 +319,7 @@ which in terms of $z$ is
         0 & 1 & 0 & \dots & 0 \\
         0 & 0 & 1 & \dots & 0 \\
         \vdots & \vdots & \vdots & \ddots & \vdots \\
-        0 & 0 & 0 & \dots  & 1 \\
+        0 & 0 & 0 & \dots & 1 \\
         \frac{-k_0}{k_n} & \frac{-k_1}{k_n} & \dots & \frac{-k_{n-2}}{k_n} & \frac{-k_{n-1}}{k_n}
       \end{bmatrix}
       \begin{bmatrix}
@@ -338,7 +338,7 @@ In the $n$th (last) row the coefficients are the result of isolating $x^{(n)}$ f
 A matrix with this type of pattern is called a companion matrix.
 
 Applying this method to our box-spring system (eq. \ref{eq:boxeq}) we get
-\begin{align}
+\begin{align} \label{eq:boxeqCompanion}
 \begin{bmatrix}
         \dot{x} \\
         \ddot{x} \\
@@ -355,8 +355,9 @@ Applying this method to our box-spring system (eq. \ref{eq:boxeq}) we get
 \end{align}
 Let's take a moment to appreciate the usefulness of linear DEs in analyzing this oscillator system.
 Notice how we didn't need to know any intricacies of physics, complex analysis, formulas presented deus ex machina, etc.
-For instance, take a look at this section of the \href{https://en.wikipedia.org/wiki/Harmonic_oscillator#Universal_oscillator_equatio}{Wikipedia page for Harmonic Oscillator}
-which contains undefined technical terms, arbitrary constants, complex exponentials, you get the idea.
-$\dot{x} = Ax$ tells us everything about this oscillator, and we can consequently derive the other details.
+For instance, take a look at this section of the \href{https://en.wikipedia.org/wiki/Harmonic_oscillator#Universal_oscillator_equation}{Wikipedia page for Harmonic Oscillator}.
+There are undefined terms \& constants, complex exponentials, and a lot more cruft.
+In contrast, if you understand the dynamics of (\ref{eq:boxeqCompanion}),
+then you already know everything about this oscillator, and can consequently derive the cruft.
 
 \end{document}
