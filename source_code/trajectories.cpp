@@ -90,6 +90,10 @@ f32 newAData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
 bool spawn_new_trajectories = true;
 bool show_eigenvectors = true;
 
+constexpr f64 trajectory_lifetime_s = 5;
+f64 time_since_last_spawn = 0;
+constexpr f64 spawn_period = trajectory_lifetime_s / numtrajectories;
+
 void gameloop_trajectories()
 {
    ImGuiIO& io = ImGui::GetIO();
@@ -99,13 +103,22 @@ void gameloop_trajectories()
       initTrajectory(&trajectories[newtrajidx]);
       addstate(currentstates, newtrajidx, newcoords);
       newtrajidx = (newtrajidx + 1) % numtrajectories;
+
+      time_since_last_spawn = 0;
    }
-   else if (!paused && spawn_new_trajectories && framenumber % 3 == 0)
+   else if (!paused && spawn_new_trajectories)
    {
-      Vec2F64 newcoords = { randfloat64(-boxlim, boxlim), randfloat64(-boxlim, boxlim) };
-      initTrajectory(&trajectories[newtrajidx]);
-      addstate(currentstates, newtrajidx, newcoords);
-      newtrajidx = (newtrajidx + 1) % numtrajectories;
+      time_since_last_spawn += dt;
+
+      while (time_since_last_spawn > spawn_period)
+      {
+         Vec2F64 newcoords = { randfloat64(-boxlim, boxlim), randfloat64(-boxlim, boxlim) };
+         initTrajectory(&trajectories[newtrajidx]);
+         addstate(currentstates, newtrajidx, newcoords);
+         newtrajidx = (newtrajidx + 1) % numtrajectories;
+
+         time_since_last_spawn -= spawn_period;
+      }
    }
 
    { ZoneScopedN("update trajectories");
