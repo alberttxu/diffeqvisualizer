@@ -51,6 +51,74 @@ void gameloop_oscillator()
       currentstate.elems[1] = 0;
    }
 
+   Mat2x2F64 A = {0, (f64) -k_springconstant / (f64)boxMass_kg, 1, (f64) -k_friction / (f64)boxMass_kg};
+   Eigen eigen = decomposition(A);
+   Vec2F64 newstate = matvecmul(expm(dt * A), currentstate);
+
+   ImGui::Text("A:[%f %f\n%f %f]", A.elems[0], A.elems[2], A.elems[1], A.elems[3]);
+   ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
+         eigen.values[0].rl, eigen.values[0].im,
+         eigen.values[1].rl, eigen.values[1].im);
+   ImGui::Text("eigenvectors:\n[%f + %f i, %f + %f i]\n[%f + %f i, %f + %f i]",
+         eigen.vectors[0][0].rl, eigen.vectors[0][0].im,
+         eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
+         eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
+         eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
+
+   time_since_last_spawn += dt;
+
+   while (time_since_last_spawn > spawn_period)
+   {
+      Vec2F64 newcoords = { randfloat64(-boxlim, boxlim), randfloat64(-boxlim, boxlim) };
+      initTrajectory(&trajectories[newtrajidx]);
+      addstate(currentstates, newtrajidx, newcoords);
+      newtrajidx = (newtrajidx + 1) % numtrajectories;
+
+      time_since_last_spawn -= spawn_period;
+   }
+
+   { ZoneScopedN("update trajectories");
+#ifdef JULIA_BACKEND
+   jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x_jlarr, A, jl_box_float64(dt));
+   JL_GC_PUSH1(&matrix_2xN_newstates);
+   f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
+
+   for (int i = 0; i < numtrajectories; i++)
+   {
+      updateposition(&trajectories[i], *(Vec2F64 *)&newstates[2*i]);
+   }
+   memcpy(currentstates, newstates, numtrajectories * 2 * sizeof(f64));
+
+   JL_GC_POP();
+#else
+   Mat2x2F64 updateMatrix = expm(dt * A);
+   for (int i = 0; i < numtrajectories; i += 1)
+   {
+      Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
+
+      updateposition(&trajectories[i], newstate);
+      currentstates[i] = newstate;
+   }
+#endif
+   }
+
+   { ZoneScopedN("draw trajectories");
+   for (int i = 0; i < numtrajectories; i++)
+   {
+      Trajectory trajectory = trajectories[i];
+
+      Vector2 points[histcapacity];
+      for (int i = 0; i < trajectory.size; i += 1)
+      {
+         points[i] = coords2pixels(getRecentPos(trajectory, i));
+      }
+      for (int i = 0; i < trajectory.size - 1; i += 1)
+      {
+         DrawLineEx(points[i], points[i + 1], 1, LIGHTGRAY);
+      }
+   }
+   }
+
    // draw box
    DrawRectangleLinesEx(
          (Rectangle){
@@ -98,20 +166,6 @@ void gameloop_oscillator()
    }
 
    DrawCircleV(coords2pixels(currentstate), 6, MAROON);
-
-   Mat2x2F64 A = {0, (f64) -k_springconstant / (f64)boxMass_kg, 1, (f64) -k_friction / (f64)boxMass_kg};
-   Eigen eigen = decomposition(A);
-   Vec2F64 newstate = matvecmul(expm(dt * A), currentstate);
-
-   ImGui::Text("A:[%f %f\n%f %f]", A.elems[0], A.elems[2], A.elems[1], A.elems[3]);
-   ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
-         eigen.values[0].rl, eigen.values[0].im,
-         eigen.values[1].rl, eigen.values[1].im);
-   ImGui::Text("eigenvectors:\n[%f + %f i, %f + %f i]\n[%f + %f i, %f + %f i]",
-         eigen.vectors[0][0].rl, eigen.vectors[0][0].im,
-         eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
-         eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
-         eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
 
    ImGuiIO& io = ImGui::GetIO();
    if (paused)
