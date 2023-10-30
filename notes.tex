@@ -44,7 +44,7 @@ but for now we will analyze the linear case.
 Important notes:
 \begin{itemize}
   \item There are many possible solutions for a differential equation (DE).
-  In equation \ref{eq:xdoteqAx}, $x$ refers to any solution, not necessarily a specific one.
+  In equation \ref*{eq:xdoteqAx}, $x$ refers to any solution, not necessarily a specific one.
   \item For most complicated DEs there is no closed-form expression that can describe all possible solutions.
   \item For a particular (i.e. specific) solution $x(t)$, it is useful to think of $x$ not as a function, but as some quantity at time $t$ in a simulation.
     \subitem Example: $x$ represents the location of an object, and $\dot{x}$ represents its velocity.
@@ -53,9 +53,9 @@ Important notes:
 \end{itemize}
 
 
-\section{1-D case}
+\section{1-D}
 
-We want to solve equation \ref{eq:xdoteqAx},
+We want to solve equation \ref*{eq:xdoteqAx},
 $$\dot{x} = Ax,$$
 where $A$, $x$, and $\dot{x}$ are numbers.
 Let's use a simple example: $x$ is the location of a particle on a number line and $\dot{x}$ is its velocity.
@@ -83,7 +83,7 @@ since $x_\mathrm{initial}$ uniquely determines $c$.
   \href{https://en.wikipedia.org/wiki/Compound_interest#Continuous_compounding}{compound interest}.
 \end{itemize}
 
-\section{2-D case}
+\section{2-D}
 
 This is much more interesting since there are numerous ways a 2-D point can move relative to the origin.
 I believe it is very hard to understand the dynamics in this case without a graphical application.
@@ -91,14 +91,14 @@ And so I encourage the reader to play around with the elements of $A$ to see how
 In the rest of this section I won't go into troublesome formulas and derivations like in most college courses,
 and instead only mention basic definitions and notation required to understand this section.
 Higher dimensional linear DEs are also known as linear dynamical systems.
-An excellent course on this topic is taught at Stanford: \url{https://see.stanford.edu/Course/EE263}.
+An excellent \href{https://see.stanford.edu/Course/EE263}{course} on this topic is taught at Stanford.
 And for those who want a quick infographic,
-\url{https://en.wikipedia.org/wiki/Stability_theory} has content that supplements the basics covered here,
+\href{https://en.wikipedia.org/wiki/Stability_theory}{this wikipedia page} has content that supplements the basics covered here,
 although in my opinion the language is a bit dense.
 
 In 2 dimensions, $x$ and $\dot{x}$ are vectors with 2 components (a.k.a elements, entries), and $A$ is a $2\times 2$ matrix.
 I won't use fancy LaTeX to emphasize that $A$, $x$, and $\dot{x}$ are not scalars.
-Equation \ref{eq:xdoteqAx},
+Equation \ref*{eq:xdoteqAx},
 $$ \dot{x} = Ax ,$$
 still has the same meaning as before.
 We can imagine that $x$ represents a particle's position in a 2-D plane,
@@ -142,11 +142,10 @@ In the context of our linear DE, $\dot{x} = Ax$, if a trajectory $v$ is an eigen
 \begin{equation}
 \dot{v} = Av = \lambda v
 \end{equation}
-which is actually the 1-D case in each component,
+which is actually 1-D in each component,
 i.e. $\dot{v}_\mathrm{horiz} = \lambda v_\mathrm{horiz}$, $\dot{v}_\mathrm{vert} = \lambda v_\mathrm{vert}$.
-Visually this means that $v$ moves either directly towards or away from the origin.
-And therefore it may grow or shrink, but cannot rotate - its angle never changes.
-Just like in the 1-D case, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to growth.
+This means that $v$ travels either directly towards or away from the origin, but its angle never changes.
+And just like in one dimension, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to growth.
 $\lambda$ is called the eigenvalue associated with the eigenvector $v$.
 
 Important notes:
@@ -154,10 +153,10 @@ Important notes:
 \item Any scaled version of $v$ is also an eigenvector of $A$.
 Therefore grammatically it is more correct to say $v$ is \textit{an} (instead of \textit{the}) eigenvector associated with $\lambda$.
 The line spanned by $v$ is sometimes called the ``eigenspace'' associated with $\lambda$, but this terminology is not universally standard.
-\item For an $n\times n$ matrix, there are $n$ eigenvector-eigenvalue pairs. However, the eigenvalues are not always distinct.
+\item For an $n\times n$ matrix, there are $n$ eigenvector-eigenvalue pairs. However, the eigenvalues are not necessarily distinct.
 \item Conventional notation in many fields denotes eigenvectors as $v_i$ using subscripts.
-For example: ``\textit{Let $ v_1,\cdots,v_n $ be eigenvectors of $A$ with eigenvalues $ \lambda_1,\cdots,\lambda_n $}.''
-Sometimes this may be confusing since subscripts are also commonly used to refer to scalar elements of vectors.
+For example: ``\textit{Let $ v_1,\cdots,v_n $ be eigenvectors of $A$ with associated eigenvalues $ \lambda_1,\cdots,\lambda_n $}.''
+Sometimes this is confusing because a subscript is also used to refer to an individual component of a vector.
 Be mindful of literary context.
 \end{itemize}
 
@@ -180,7 +179,7 @@ Again, in the context of our linear DE, $\dot{x} = Ax$, we plug in $x$ and get
 However, we already know that
 $$ \dot{v}_1 = A v_1 = \lambda_1 v_1 $$
 $$ \dot{v}_2 = A v_2 = \lambda_2 v_2 $$
-with solutions
+have solutions
 $$ v_1(t) = v_{1,\mathrm{initial}} e^{t\lambda_1} $$
 $$ v_2(t) = v_{2,\mathrm{initial}} e^{t\lambda_2} $$
 
@@ -192,23 +191,21 @@ Each trajectory has components in the blue and green directions.
 Eigenvectors on the blue line have a negative eigenvalue, and eigenvectors on the green line have a positive eigenvalue.
 So over time, the blue component of $x$ shrinks and the green component of $x$ grows.
 
+There is another way to compute the general solution.
 You might wonder if we can reuse the formula from the 1-D solution (equation \ref{eq:1Dsol}).
-\begin{equation}
+\begin{equation} \label{eq:2Dmatexpsol}
 x(t) = e^{tA} x_\mathrm{initial}
 \end{equation}
-Due to syntactial reasons we have to swap the order of symbols on the right.
-$x(t)$ and $x_\mathrm{initial}$ are vectors, so the term $e^{tA}$ must either be a scalar or a $2\times 2$ matrix.
-Spoiler: it's the latter, and the formula is indeed valid in 2 dimensions,
-but we need to extend the definition of the exponential function for a square matrix $A$.
-This is called the matrix exponential, but how exactly is it defined?
-And how does this method compare to the one we just analyzed?
-Gilbert Strang at MIT gives some good answers in this \href{https://youtu.be/LwSk9M5lJx4}{youtube video},
+Here $x(t)$ and $x_\mathrm{initial}$ are vectors, and $e^{tA}$ is a $2\times 2$ matrix --- this is called the matrix exponential function applied to $tA$.
+But how exactly is it defined?
+And how does this method compare to the one based on eigenvectors?
+Gilbert Strang has some good answers in this \href{https://youtu.be/LwSk9M5lJx4}{youtube video},
 so I won't regurgitate them here.
 But I will emphasize what the matrix exponential actually does: it \textbf{acts as a time travel operator}.
-Given an initial condition $x_\mathrm{initial} = x(0)$, we can compute a trajectory's future value $x(t)$ for any $t$ (equation 8).
-Furthermore, given a trajectory's current value $x_\mathrm{current} = x(t)$, we can compute its past value $dt$ seconds \textit{ago}:
+Given an initial condition $x_\mathrm{initial} = x(0)$, we can compute a trajectory's future value $x(t)$ for any $t$ (equation \ref*{eq:2Dmatexpsol}).
+Furthermore, given a trajectory's current value $x_\mathrm{current} = x(t)$, we can compute its past value from $\Delta t$ seconds \textit{ago}:
 \begin{equation}
-x(t-dt) = e^{-dtA} x_\mathrm{current}
+x(t-\Delta t) = e^{-\Delta t A} x_\mathrm{current}
 \end{equation}
 
 See also:
@@ -254,7 +251,7 @@ The friction force is
 where $k_\mathrm{friction}$ is called the viscous damping coefficient, and $\dot{x}$ is the box's velocity.
 The term viscous is used in fluid dynamics, but its the same idea here.
 Friction always acts against the direction of velocity because it is a drag force.
-With these 2 forces, equation \ref{eq:newton2ndlaw} becomes
+With these 2 forces, equation \ref*{eq:newton2ndlaw} becomes
 \begin{equation} \label{eq:boxeq}
 m \ddot{x} =
 -k_\mathrm{friction} \dot{x}
@@ -262,7 +259,7 @@ m \ddot{x} =
 \end{equation}
 We have not seen this form before.
 The $\ddot{x}$ (2nd derivative) term makes this a 2nd-order equation whereas $\dot{x} = Ax$ is a 1st-order equation, so it looks like we are stuck.
-The question is whether it is possible to convert equation \ref{eq:boxeq} into the form $\dot{x} = Ax$.
+The question is whether it is possible to convert equation \ref*{eq:boxeq} into the form $\dot{x} = Ax$.
 At this point, some lecturers will pull a ``trick'', and arrive at a new set of equations without explaining why it works.
 I'll explain the general method and then apply it to our box-spring system.
 
@@ -337,7 +334,7 @@ This is a consequence of how we defined $z$ --- the $i$th element of $\dot{z}$ e
 In the $n$th (last) row the coefficients are the result of isolating $x^{(n)}$ from equation \ref{eq:nthOrderDE} to the left-hand side.
 A matrix with this type of pattern is called a companion matrix.
 
-Applying this method to our box-spring system (eq. \ref{eq:boxeq}) we get
+Applying this method to our box-spring system (eq. \ref{eq:boxeq}), we get
 \begin{align} \label{eq:boxeqCompanion}
 \begin{bmatrix}
         \dot{x} \\
@@ -353,11 +350,11 @@ Applying this method to our box-spring system (eq. \ref{eq:boxeq}) we get
         \dot{x} \\
       \end{bmatrix}
 \end{align}
-Let's take a moment to appreciate the usefulness of linear DEs in analyzing this oscillator system.
-Notice how we didn't need to know any intricacies of physics, complex analysis, formulas presented deus ex machina, etc.
+Let's take a moment to appreciate the simplicity of using linear DEs to analyze this system.
+Notice how we didn't need to know any advanced physics, complex analysis, or other prior knowledge.
 For instance, take a look at this section of the \href{https://en.wikipedia.org/wiki/Harmonic_oscillator#Universal_oscillator_equation}{Wikipedia page for Harmonic Oscillator}.
-There are undefined terms \& constants, complex exponentials, and a lot more cruft.
-In contrast, if you understand the dynamics of (\ref{eq:boxeqCompanion}),
+There are undefined terms \& symbols, complex exponentials, formulas presented deus ex machina, etc.
+In contrast, if you can visualize the dynamics of (\ref*{eq:boxeqCompanion}),
 then you already know everything about this oscillator, and can consequently derive the cruft.
 
 \end{document}
