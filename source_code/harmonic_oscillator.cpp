@@ -66,7 +66,6 @@ void gameloop_oscillator()
          eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
 
    time_since_last_spawn += dt;
-
    while (time_since_last_spawn > spawn_period)
    {
       Vec2F64 newcoords = { randfloat64(-boxlim, boxlim), randfloat64(-boxlim, boxlim) };
@@ -77,30 +76,7 @@ void gameloop_oscillator()
       time_since_last_spawn -= spawn_period;
    }
 
-   { ZoneScopedN("update trajectories");
-#ifdef JULIA_BACKEND
-   jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x_jlarr, A, jl_box_float64(dt));
-   JL_GC_PUSH1(&matrix_2xN_newstates);
-   f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
-
-   for (int i = 0; i < numtrajectories; i++)
-   {
-      updateposition(&trajectories[i], *(Vec2F64 *)&newstates[2*i]);
-   }
-   memcpy(currentstates, newstates, numtrajectories * 2 * sizeof(f64));
-
-   JL_GC_POP();
-#else
-   Mat2x2F64 updateMatrix = expm(dt * A);
-   for (int i = 0; i < numtrajectories; i += 1)
-   {
-      Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
-
-      updateposition(&trajectories[i], newstate);
-      currentstates[i] = newstate;
-   }
-#endif
-   }
+   step(A);
 
    { ZoneScopedN("draw trajectories");
    for (int i = 0; i < numtrajectories; i++)

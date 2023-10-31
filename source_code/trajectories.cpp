@@ -1,18 +1,5 @@
 #pragma once
 
-#define numtrajectories 500
-#define boxlim 20.0
-
-static inline
-void resetstates(f64 *arr_2xN)
-{
-   for (int i = 0; i < numtrajectories; i += 1)
-   {
-      arr_2xN[2*i + 0] = randfloat64(-boxlim, boxlim);
-      arr_2xN[2*i + 1] = randfloat64(-boxlim, boxlim);
-   }
-}
-
 #define histcapacity 16
 struct Trajectory
 {
@@ -34,6 +21,58 @@ void updateposition(Trajectory *t, Vec2F64 position)
    t->curidx = (t->curidx + 1) % histcapacity;
    t->size = min(histcapacity, t->size + 1);
 }
+
+#define numtrajectories 400
+Trajectory trajectories[numtrajectories];
+int newtrajidx = 0;
+
+#ifdef JULIA_BACKEND
+   f64 *currentstates;
+   jl_array_t *A;
+   jl_array_t *x_jlarr;
+   jl_function_t *solve_autonomous;
+#else
+   Vec2F64 currentstates[numtrajectories];
+   Mat2x2F64 A;
+#endif
+
+f64 *AData;
+f32 newAData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
+bool spawn_new_trajectories = true;
+bool show_eigenvectors = true;
+
+constexpr f64 trajectory_lifetime_s = 5;
+f64 time_since_last_spawn = 0;
+constexpr f64 spawn_period = trajectory_lifetime_s / numtrajectories;
+
+#ifdef JULIA_BACKEND
+void step(jl_array_t *A)
+{
+   ZoneScoped;
+   jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x_jlarr, A, jl_box_float64(dt));
+   JL_GC_PUSH1(&matrix_2xN_newstates);
+   f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
+
+   for (int i = 0; i < numtrajectories; i++)
+   {
+      updateposition(&trajectories[i], *(Vec2F64 *)&newstates[2*i]);
+   }
+   memcpy(currentstates, newstates, numtrajectories * 2 * sizeof(f64));
+   JL_GC_POP();
+}
+#else
+
+void step(Mat2x2F64 A)
+{
+   Mat2x2F64 updateMatrix = expm(dt * A);
+   for (int i = 0; i < numtrajectories; i += 1)
+   {
+      Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
+      updateposition(&trajectories[i], newstate);
+      currentstates[i] = newstate;
+   }
+}
+#endif
 
 Vec2F64 getRecentPos(Trajectory t, int ago)
 {
@@ -57,6 +96,18 @@ Vec2F64 getLeastRecentPos(Trajectory t)
 }
 
 
+#define boxlim 20.0
+
+static inline
+void resetstates(f64 *arr_2xN)
+{
+   for (int i = 0; i < numtrajectories; i += 1)
+   {
+      arr_2xN[2*i + 0] = randfloat64(-boxlim, boxlim);
+      arr_2xN[2*i + 1] = randfloat64(-boxlim, boxlim);
+   }
+}
+
 #ifdef JULIA_BACKEND
 static inline
 void addstate(f64 *currentstates, int idx, Vec2F64 newtrajectorycoords)
@@ -73,26 +124,6 @@ void addstate(Vec2F64 *currentstates, int idx, Vec2F64 newtrajectorycoords)
    currentstates[idx] = newtrajectorycoords;
 }
 #endif
-
-Trajectory trajectories[numtrajectories];
-int newtrajidx = 0;
-#ifdef JULIA_BACKEND
-f64 *currentstates;
-jl_array_t *A;
-jl_array_t *x_jlarr;
-jl_function_t *solve_autonomous;
-#else
-Vec2F64 currentstates[numtrajectories];
-Mat2x2F64 A;
-#endif
-f64 *AData;
-f32 newAData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
-bool spawn_new_trajectories = true;
-bool show_eigenvectors = true;
-
-constexpr f64 trajectory_lifetime_s = 5;
-f64 time_since_last_spawn = 0;
-constexpr f64 spawn_period = trajectory_lifetime_s / numtrajectories;
 
 void gameloop_trajectories()
 {
@@ -121,34 +152,9 @@ void gameloop_trajectories()
       }
    }
 
-   { ZoneScopedN("update trajectories");
-#ifdef JULIA_BACKEND
-   jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x_jlarr, A, jl_box_float64(dt));
-   JL_GC_PUSH1(&matrix_2xN_newstates);
-   f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
-
    if (!paused)
    {
-      for (int i = 0; i < numtrajectories; i++)
-      {
-         updateposition(&trajectories[i], *(Vec2F64 *)&newstates[2*i]);
-      }
-      memcpy(currentstates, newstates, numtrajectories * 2 * sizeof(f64));
-   }
-   JL_GC_POP();
-#else
-   Mat2x2F64 updateMatrix = expm(dt * A);
-   for (int i = 0; i < numtrajectories; i += 1)
-   {
-      Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
-
-      if (!paused)
-      {
-         updateposition(&trajectories[i], newstate);
-         currentstates[i] = newstate;
-      }
-   }
-#endif
+      step(A);
    }
 
    drawcoordaxes();
