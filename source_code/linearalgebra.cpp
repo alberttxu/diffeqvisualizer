@@ -128,6 +128,16 @@ Mat2x2F64 expm(Mat2x2F64 A)
    return result;
 }
 
+Mat2x2F64 Identity2()
+{
+   return {1, 0, 0, 1};
+}
+
+Mat2x2F64 Zero2()
+{
+   return {0, 0, 0, 0};
+}
+
 struct Mat4x4F64
 {
    f64 elems[4][4]; // column-major order: elems[c][r]

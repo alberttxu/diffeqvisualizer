@@ -45,6 +45,10 @@ constexpr f64 trajectory_lifetime_s = 5;
 f64 time_since_last_spawn = 0;
 constexpr f64 spawn_period = trajectory_lifetime_s / numtrajectories;
 
+Mat2x2F64 B;
+Mat4x4F64 Atilde;
+
+
 #ifdef JULIA_BACKEND
 void step(jl_array_t *A)
 {
@@ -64,7 +68,17 @@ void step(jl_array_t *A)
 
 void step(Mat2x2F64 A)
 {
-   Mat2x2F64 updateMatrix = expm(dt * A);
+   // The upper left block of the matrix exponential of the block matrix
+   //      A B
+   //      0 0
+   // is equal to the matrix exponential of A.
+   // https://math.stackexchange.com/questions/658276/integral-of-matrix-exponential/4105683#4105683
+   Atilde = BlockMatrix(
+         A,       B,
+         Zero2(), Identity2()
+   );
+   Mat2x2F64 updateMatrix = getUpperLeftBlock(expm(dt * Atilde));
+
    for (int i = 0; i < numtrajectories; i += 1)
    {
       Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
