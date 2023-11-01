@@ -261,6 +261,30 @@ Mat4x4F64 expm(Mat4x4F64 A)
    return result;
 }
 
+Mat4x4F64 BlockMatrix(
+      Mat2x2F64 A, Mat2x2F64 B,
+      Mat2x2F64 C, Mat2x2F64 D)
+{
+   Mat4x4F64 R;
+   R.elems[0][0] = A.elems[0];
+   R.elems[0][1] = A.elems[1];
+   R.elems[0][2] = C.elems[0];
+   R.elems[0][3] = C.elems[1];
+   R.elems[1][0] = A.elems[2];
+   R.elems[1][1] = A.elems[3];
+   R.elems[1][2] = C.elems[2];
+   R.elems[1][3] = C.elems[3];
+   R.elems[2][0] = B.elems[0];
+   R.elems[2][1] = B.elems[1];
+   R.elems[2][2] = D.elems[0];
+   R.elems[2][3] = D.elems[1];
+   R.elems[3][0] = B.elems[2];
+   R.elems[3][1] = B.elems[3];
+   R.elems[3][2] = D.elems[2];
+   R.elems[3][3] = D.elems[3];
+   return R;
+}
+
 struct ComplexF32
 {
    f32 rl;

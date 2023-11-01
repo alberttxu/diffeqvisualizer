@@ -269,6 +269,18 @@ void test_ourlinearalgebra()
    assert(eigen.vectors[1][0].im == 0);
    assert(eigen.vectors[1][1].im == 0);
    }
+
+   {
+   puts("==== block matrix ====");
+   Mat2x2F64 A(1, 3, 2, 4); Mat2x2F64 B(5, 7, 6, 8);
+   Mat2x2F64 C(0, 0, 0, 0); Mat2x2F64 D(9, 9, 9, 9);
+   Mat4x4F64 ans = {
+      1, 2, 5, 6,
+      3, 4, 7, 8,
+      0, 0, 9, 9,
+      0, 0, 9, 9 };
+   assert(isapprox(BlockMatrix(A, B, C, D), ans));
+   }
 }
 
 int main(void)
