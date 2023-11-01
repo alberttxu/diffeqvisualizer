@@ -128,6 +128,139 @@ Mat2x2F64 expm(Mat2x2F64 A)
    return result;
 }
 
+struct Mat4x4F64
+{
+   f64 elems[4][4]; // column-major order: elems[c][r]
+
+   Mat4x4F64()
+   {
+      for (int i = 0; i < 4; i += 1)
+         for (int j = 0; j < 4; j += 1)
+            elems[i][j] = 0;
+   }
+
+   Mat4x4F64(
+      f64 a11, f64 a12, f64 a13, f64 a14,
+      f64 a21, f64 a22, f64 a23, f64 a24,
+      f64 a31, f64 a32, f64 a33, f64 a34,
+      f64 a41, f64 a42, f64 a43, f64 a44)
+   {
+      elems[0][0] = a11;
+      elems[0][1] = a21;
+      elems[0][2] = a31;
+      elems[0][3] = a41;
+      elems[1][0] = a12;
+      elems[1][1] = a22;
+      elems[1][2] = a32;
+      elems[1][3] = a42;
+      elems[2][0] = a13;
+      elems[2][1] = a23;
+      elems[2][2] = a33;
+      elems[2][3] = a43;
+      elems[3][0] = a14;
+      elems[3][1] = a24;
+      elems[3][2] = a34;
+      elems[3][3] = a44;
+   }
+};
+
+static inline
+void print(Mat4x4F64 A)
+{
+   printf("[\n");
+   printf("[%f, %f, %f, %f]\n", A.elems[0][0], A.elems[1][0], A.elems[2][0], A.elems[3][0]);
+   printf("[%f, %f, %f, %f]\n", A.elems[0][1], A.elems[1][1], A.elems[2][1], A.elems[3][1]);
+   printf("[%f, %f, %f, %f]\n", A.elems[0][2], A.elems[1][2], A.elems[2][2], A.elems[3][2]);
+   printf("[%f, %f, %f, %f]\n", A.elems[0][3], A.elems[1][3], A.elems[2][3], A.elems[3][3]);
+   printf("]\n");
+}
+
+static inline
+Mat4x4F64 matmul(Mat4x4F64 A, Mat4x4F64 B)
+{
+   Mat4x4F64 C;
+   for (int c = 0; c < 4; c += 1)
+   {
+      for (int r = 0; r < 4; r += 1)
+      {
+         for (int k = 0; k < 4; k += 1)
+         {
+            C.elems[c][r] += A.elems[k][r] * B.elems[c][k];
+         }
+      }
+   }
+   return C;
+}
+
+static inline
+Mat4x4F64 operator*(f64 t, Mat4x4F64 A)
+{
+   Mat4x4F64 C;
+   for (int i = 0; i < 4; i += 1)
+   {
+      for (int j = 0; j < 4; j += 1)
+      {
+         C.elems[i][j] = t * A.elems[i][j];
+      }
+   }
+   return C;
+}
+
+static inline
+Mat4x4F64 operator+(Mat4x4F64 A, Mat4x4F64 B)
+{
+   Mat4x4F64 C;
+   for (int i = 0; i < 4; i += 1)
+   {
+      for (int j = 0; j < 4; j += 1)
+      {
+         C.elems[i][j] = A.elems[i][j] + B.elems[i][j];
+      }
+   }
+   return C;
+}
+
+static inline
+bool isapprox(Mat4x4F64 A, Mat4x4F64 B, f64 tol = 1e-5)
+{
+   for (int i = 0; i < 4; i += 1)
+   {
+      for (int j = 0; j < 4; j += 1)
+      {
+         if (!isapprox(A.elems[i][j], B.elems[i][j], tol))
+         {
+            return false;
+         }
+      }
+   }
+   return true;
+}
+
+Mat4x4F64 Identity4()
+{
+   Mat4x4F64 A;
+   A.elems[0][0] = 1;
+   A.elems[1][1] = 1;
+   A.elems[2][2] = 1;
+   A.elems[3][3] = 1;
+   return A;
+}
+
+static inline
+Mat4x4F64 expm(Mat4x4F64 A)
+{
+   Mat4x4F64 result = Identity4();
+   Mat4x4F64 An = Identity4();
+   f64 factorial = 1;
+   for (int i = 1; i < 20; i += 1)
+   {
+      An = matmul(An, A);
+      factorial *= i;
+      result = result + (1/factorial) * An;
+   }
+   return result;
+}
+
 struct ComplexF32
 {
    f32 rl;
@@ -314,3 +447,4 @@ Eigen decomposition(Mat2x2F64 A)
    result.vectors[1][1] = v2.elems[1];
    return result;
 }
+

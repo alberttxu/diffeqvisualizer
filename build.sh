@@ -152,7 +152,8 @@ elif [ $1 = "profile" ]; then
 
 elif [ $1 = "tests" ]; then
    set -xe
-   LIBS="$LIBS dependencies/imgui/imgui_demo.o"
+   INCLUDES="$INCLUDES -I/opt/local/include/julia"
+   LIBS="$LIBS dependencies/imgui/imgui_demo.o -ljulia -Wl,-rpath,/opt/local/lib"
    $CC $CFLAGS $WARNINGS $INCLUDES -o tests source_code/tests.cpp $LIBS
    exit
 

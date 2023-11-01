@@ -1,5 +1,7 @@
 #pragma once
 
+#include "trajectories.cpp"
+
 void gameloop_oscillator()
 {
    drawcoordaxes();
