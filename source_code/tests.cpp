@@ -280,6 +280,8 @@ void test_ourlinearalgebra()
       0, 0, 9, 9,
       0, 0, 9, 9 };
    assert(isapprox(BlockMatrix(A, B, C, D), ans));
+
+   assert(isapprox(getUpperLeftBlock(ans), A));
    }
 }
 

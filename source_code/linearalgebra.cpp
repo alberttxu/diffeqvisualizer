@@ -285,6 +285,16 @@ Mat4x4F64 BlockMatrix(
    return R;
 }
 
+Mat2x2F64 getUpperLeftBlock(Mat4x4F64 M)
+{
+   Mat2x2F64 A;
+   A.elems[0] = M.elems[0][0];
+   A.elems[1] = M.elems[0][1];
+   A.elems[2] = M.elems[1][0];
+   A.elems[3] = M.elems[1][1];
+   return A;
+}
+
 struct ComplexF32
 {
    f32 rl;
