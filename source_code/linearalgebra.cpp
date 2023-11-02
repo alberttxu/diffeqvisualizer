@@ -40,6 +40,12 @@ bool isapprox(Vec2F64 a, Vec2F64 b)
    return isapprox(a.elems[0], b.elems[0]) && isapprox(a.elems[1], b.elems[1]);
 }
 
+static inline
+Vec2F64 operator+(Vec2F64 a, Vec2F64 b)
+{
+   return {a.elems[0] + b.elems[0], a.elems[1] + b.elems[1]};
+}
+
 struct Mat2x2F64
 {
    f64 elems[4];

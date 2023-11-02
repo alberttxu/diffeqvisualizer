@@ -37,7 +37,6 @@ int newtrajidx = 0;
 #endif
 
 f64 *AData;
-f32 newAData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
 bool spawn_new_trajectories = true;
 bool show_eigenvectors = true;
 
@@ -47,7 +46,7 @@ constexpr f64 spawn_period = trajectory_lifetime_s / numtrajectories;
 
 Mat2x2F64 B;
 Mat4x4F64 Atilde;
-
+Vec2F64 u_input;
 
 #ifdef JULIA_BACKEND
 void step(jl_array_t *A)
@@ -77,11 +76,15 @@ void step(Mat2x2F64 A)
          A,       B,
          Zero2(), Identity2()
    );
-   Mat2x2F64 updateMatrix = getUpperLeftBlock(expm(dt * Atilde));
+   Mat4x4F64 exp_dtAtilde = expm(dt * Atilde);
+   Mat2x2F64 dynamicsUpdateMatrix = getUpperLeftBlock(exp_dtAtilde);
+   Mat2x2F64 inputUpdateMatrix = getUpperRightBlock(exp_dtAtilde);
 
    for (int i = 0; i < numtrajectories; i += 1)
    {
-      Vec2F64 newstate = matvecmul(updateMatrix, currentstates[i]);
+      Vec2F64 newstate = matvecmul(dynamicsUpdateMatrix, currentstates[i]);
+      newstate = newstate + matvecmul(inputUpdateMatrix, u_input);
+
       updateposition(&trajectories[i], newstate);
       currentstates[i] = newstate;
    }
@@ -255,16 +258,14 @@ void gameloop_trajectories()
    ImGui::Checkbox("show eigenvectors", &show_eigenvectors);
 
    f32 maxval = 5;
-   bool A_was_modified[2] = {false, false};
-   A_was_modified[0] = ImGui::SliderFloat2("a11, a12", newAData + 0, -maxval, maxval);
-   A_was_modified[1] = ImGui::SliderFloat2("a21, a22", newAData + 2, -maxval, maxval);
-   if (any(A_was_modified, 2))
-   {
-      AData[0] = (f64) newAData[0];
-      AData[1] = (f64) newAData[2];
-      AData[2] = (f64) newAData[1];
-      AData[3] = (f64) newAData[3];
-   }
+   static f32 newAData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
+   ImGui::SliderFloat2("A11, A12", newAData + 0, -maxval, maxval);
+   ImGui::SliderFloat2("A21, A22", newAData + 2, -maxval, maxval);
+   AData[0] = (f64) newAData[0];
+   AData[1] = (f64) newAData[2];
+   AData[2] = (f64) newAData[1];
+   AData[3] = (f64) newAData[3];
+   static f32 newBData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
 
    ImGui::Text("eigenvalues:\n%f + %f i,\n%f + %f i\n",
          eigen.values[0].rl, eigen.values[0].im,
@@ -274,6 +275,19 @@ void gameloop_trajectories()
          eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
          eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
          eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
+
+   ImGui::SliderFloat2("B11, B12", newBData + 0, -maxval, maxval);
+   ImGui::SliderFloat2("B21, B22", newBData + 2, -maxval, maxval);
+   B.elems[0] = (f64) newBData[0];
+   B.elems[1] = (f64) newBData[2];
+   B.elems[2] = (f64) newBData[1];
+   B.elems[3] = (f64) newBData[3];
+
+   static f32 _u_input[2] = {0, 0};
+   ImGui::SliderFloat2("u1, u2", _u_input, -maxval, maxval);
+   u_input.elems[0] = (f64) _u_input[0];
+   u_input.elems[1] = (f64) _u_input[1];
+
    ImGui::End();
    }
 
