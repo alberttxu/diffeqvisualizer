@@ -1,148 +1,36 @@
 #pragma once
 
-#define histcapacity 16
-struct Trajectory
+#include "trajectories.cpp"
+
+Mat2x2F64 B;
+Vec2F64 u_input;
+
+void step_with_control_input(Mat2x2F64 A, Mat2x2F64 B)
 {
-   Vec2F64 recentpositions[histcapacity];
-   int curidx;
-   int size;
-};
+   // The upper left block of the matrix exponential of the block matrix
+   //      A B
+   //      0 0
+   // is equal to the matrix exponential of A.
+   // https://math.stackexchange.com/questions/658276/integral-of-matrix-exponential/4105683#4105683
+   Mat4x4F64 Atilde = BlockMatrix(
+         A,       B,
+         Zero2x2(), Identity2x2()
+   );
+   Mat4x4F64 exp_dtAtilde = expm(dt * Atilde);
+   Mat2x2F64 dynamicsUpdateMatrix = getUpperLeftBlock(exp_dtAtilde);
+   Mat2x2F64 inputUpdateMatrix = getUpperRightBlock(exp_dtAtilde);
 
-void initTrajectory(Trajectory *t)
-{
-   memset(t->recentpositions, 0, histcapacity * sizeof(t->recentpositions[0]));
-   t->curidx = 0;
-   t->size = 0;
-}
-
-void updateposition(Trajectory *t, Vec2F64 position)
-{
-   t->recentpositions[t->curidx] = position;
-   t->curidx = (t->curidx + 1) % histcapacity;
-   t->size = min(histcapacity, t->size + 1);
-}
-
-#define numtrajectories 400
-Trajectory trajectories[numtrajectories];
-int newtrajidx = 0;
-
-#ifdef JULIA_BACKEND
-   f64 *currentstates;
-   jl_array_t *A;
-   jl_array_t *x_jlarr;
-   jl_function_t *solve_autonomous;
-#else
-   Vec2F64 currentstates[numtrajectories];
-   Mat2x2F64 A;
-#endif
-
-f64 *AData;
-bool spawn_new_trajectories = true;
-bool show_eigenvectors = true;
-
-constexpr f64 trajectory_lifetime_s = 5;
-f64 time_since_last_spawn = 0;
-constexpr f64 spawn_period = trajectory_lifetime_s / numtrajectories;
-
-#ifdef JULIA_BACKEND
-void step(jl_array_t *A)
-{
-   ZoneScoped;
-   jl_value_t *matrix_2xN_newstates = call(solve_autonomous, x_jlarr, A, jl_box_float64(dt));
-   JL_GC_PUSH1(&matrix_2xN_newstates);
-   f64 *newstates = (f64 *)jl_array_data((jl_array_t *) matrix_2xN_newstates);
-
-   for (int i = 0; i < numtrajectories; i++)
-   {
-      updateposition(&trajectories[i], *(Vec2F64 *)&newstates[2*i]);
-   }
-   memcpy(currentstates, newstates, numtrajectories * 2 * sizeof(f64));
-   JL_GC_POP();
-}
-
-void step(Mat2x2F64 myA)
-{
-   for (int i = 0; i < 4; i++)
-   {
-      AData[i] = myA.elems[i];
-   }
-   step(A);
-}
-
-#else
-
-void step(Mat2x2F64 A)
-{
-   Mat2x2F64 dynamicsUpdateMatrix = expm(dt * A);
    for (int i = 0; i < numtrajectories; i += 1)
    {
       Vec2F64 newstate = matvecmul(dynamicsUpdateMatrix, currentstates[i]);
+      newstate = newstate + matvecmul(inputUpdateMatrix, u_input);
 
       updateposition(&trajectories[i], newstate);
       currentstates[i] = newstate;
    }
 }
-#endif
 
-Vec2F64 getRecentPos(Trajectory t, int ago)
-{
-   assert(ago < t.size);
-   int idx = t.curidx - 1 - ago;
-   if (idx < 0)
-      idx += histcapacity;
-   return t.recentpositions[idx];
-}
-
-Vec2F64 getMostRecentPos(Trajectory t)
-{
-   assert(t.size > 0);
-   return getRecentPos(t, 0);
-}
-
-Vec2F64 getLeastRecentPos(Trajectory t)
-{
-   assert(t.size > 0);
-   return getRecentPos(t, t.size - 1);
-}
-
-static inline
-Vec2F64 randomcoord()
-{
-   f64 xmax = 0.5 * screenwidth / pixelsperunit;
-   f64 ymax = 0.5 * screenheight / pixelsperunit;
-   return {randfloat64(-xmax, xmax), randfloat64(-ymax, ymax)};
-}
-
-#define boxlim 20.0
-
-static inline
-void resetstates(f64 *arr_2xN)
-{
-   for (int i = 0; i < numtrajectories; i += 1)
-   {
-      arr_2xN[2*i + 0] = randfloat64(-boxlim, boxlim);
-      arr_2xN[2*i + 1] = randfloat64(-boxlim, boxlim);
-   }
-}
-
-#ifdef JULIA_BACKEND
-static inline
-void addstate(f64 *currentstates, int idx, Vec2F64 newtrajectorycoords)
-{
-   assert(inarraybounds(&currentstates[2*idx + 0], currentstates, &currentstates[2*numtrajectories]));
-   assert(inarraybounds(&currentstates[2*idx + 1], currentstates, &currentstates[2*numtrajectories]));
-   currentstates[2*idx + 0] = newtrajectorycoords.elems[0];
-   currentstates[2*idx + 1] = newtrajectorycoords.elems[1];
-}
-#else
-static inline
-void addstate(Vec2F64 *currentstates, int idx, Vec2F64 newtrajectorycoords)
-{
-   currentstates[idx] = newtrajectorycoords;
-}
-#endif
-
-void gameloop_trajectories()
+void gameloop_lineardynamicalsystem()
 {
    ImGuiIO& io = ImGui::GetIO();
    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse)
@@ -171,7 +59,7 @@ void gameloop_trajectories()
 
    if (!paused)
    {
-      step(A);
+      step_with_control_input(A, B);
    }
 
    drawcoordaxes();
@@ -273,6 +161,19 @@ void gameloop_trajectories()
          eigen.vectors[0][1].rl, eigen.vectors[0][1].im,
          eigen.vectors[1][0].rl, eigen.vectors[1][0].im,
          eigen.vectors[1][1].rl, eigen.vectors[1][1].im);
+
+   static f32 newBData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
+   ImGui::SliderFloat2("B11, B12", newBData + 0, -maxval, maxval);
+   ImGui::SliderFloat2("B21, B22", newBData + 2, -maxval, maxval);
+   B.elems[0] = (f64) newBData[0];
+   B.elems[1] = (f64) newBData[2];
+   B.elems[2] = (f64) newBData[1];
+   B.elems[3] = (f64) newBData[3];
+
+   static f32 _u_input[2] = {0, 0};
+   ImGui::SliderFloat2("u1, u2", _u_input, -maxval, maxval);
+   u_input.elems[0] = (f64) _u_input[0];
+   u_input.elems[1] = (f64) _u_input[1];
 
    ImGui::End();
    }
