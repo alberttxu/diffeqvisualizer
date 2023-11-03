@@ -67,7 +67,7 @@ If $A > 0$ then trajectories will move away from the origin.
 Since $\dot{x}$ is proportional to $x$,
 if $x > 0$ the trajectory will move further to the right, and if $x < 0$ it will move further to the left.
 
-If $A < 0$ then trajectories will shrink towards the origin using similar logic.
+If $A < 0$ then trajectories will shrink toward the origin using similar logic.
 
 All 3 cases can be described using the general-form solution,
 \begin{equation}
@@ -127,7 +127,7 @@ Here is a screenshot I've taken of the Trajectories demo below.
 
 Each red comet is a trajectory.
 The tail of each trajectory is drawn by creating cirlces for its most recent values.
-You may notice that the trajectories seem to move towards the origin when they are near the blue line,
+You may notice that the trajectories seem to move toward the origin when they are near the blue line,
 and are repelled away from the origin near the green line.
 This is not a coincidence and it has to do with the eigenvectors of $A$.
 
@@ -142,10 +142,11 @@ In the context of our linear DE, $\dot{x} = Ax$, if a trajectory $v$ is an eigen
 \begin{equation}
 \dot{v} = Av = \lambda v
 \end{equation}
-which is actually 1-D in each component,
+which is equivalent to two 1-D equations in each component,
 i.e. $\dot{v}_\mathrm{horiz} = \lambda v_\mathrm{horiz}$, $\dot{v}_\mathrm{vert} = \lambda v_\mathrm{vert}$.
-This means that $v$ travels either directly towards or away from the origin, but its angle never changes.
 And just like in one dimension, $\lambda < 0$ leads to shrinking, and $\lambda > 0$ leads to growth.
+So both of $v$'s components grow or shrink simultaneously.
+This means that the trajectory $v$ travels either directly towards or away from the origin, but its angle never changes.
 $\lambda$ is called the eigenvalue associated with the eigenvector $v$.
 
 Important notes:
@@ -162,7 +163,7 @@ Be mindful of literary context.
 
 \subsection*{General solution}
 
-What if a trajectory $x$ is not an eigenvector of $A$?
+What if a trajectory $x$ is \textit{not} an eigenvector of $A$?
 The key insight is that we can break $x$ into pieces which \textit{are} eigenvectors.
 That is to say, we can find some scaled eigenvectors $v_1$ and $v_2$ of $A$ that satisfy
 \begin{equation}
@@ -229,7 +230,7 @@ See also:
 Figure \ref{fig:BoxSpring} shows a box resting at equilibrium.
 We would like to analyze the motion of the box if we were to shift it away from equilibrium and then let go.
 Let's define our coordinate system with $x = 0$ at the equilibrium position, and $x > 0$ going to the right.
-($x$ represents the location of box's center).
+($x$ represents the location of the box's center).
 
 We know from Newton's 2nd law that
 \begin{equation} \label{eq:newton2ndlaw}
@@ -254,8 +255,8 @@ Friction always acts against the direction of velocity because it is a drag forc
 With these 2 forces, equation \ref*{eq:newton2ndlaw} becomes
 \begin{equation} \label{eq:boxeq}
 m \ddot{x} =
--k_\mathrm{friction} \dot{x}
 -k_\mathrm{spring} x
+-k_\mathrm{friction} \dot{x}
 \end{equation}
 We have not seen this form before.
 The $\ddot{x}$ (2nd derivative) term makes this a 2nd-order equation whereas $\dot{x} = Ax$ is a 1st-order equation, so it looks like we are stuck.
