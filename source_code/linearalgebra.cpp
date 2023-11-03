@@ -134,12 +134,12 @@ Mat2x2F64 expm(Mat2x2F64 A)
    return result;
 }
 
-Mat2x2F64 Identity2()
+Mat2x2F64 Identity2x2()
 {
    return {1, 0, 0, 1};
 }
 
-Mat2x2F64 Zero2()
+Mat2x2F64 Zero2x2()
 {
    return {0, 0, 0, 0};
 }
@@ -252,7 +252,7 @@ bool isapprox(Mat4x4F64 A, Mat4x4F64 B, f64 tol = 1e-5)
    return true;
 }
 
-Mat4x4F64 Identity4()
+Mat4x4F64 Identity4x4()
 {
    Mat4x4F64 A;
    A.elems[0][0] = 1;
@@ -265,8 +265,8 @@ Mat4x4F64 Identity4()
 static inline
 Mat4x4F64 expm(Mat4x4F64 A)
 {
-   Mat4x4F64 result = Identity4();
-   Mat4x4F64 An = Identity4();
+   Mat4x4F64 result = Identity4x4();
+   Mat4x4F64 An = Identity4x4();
    f64 factorial = 1;
    for (int i = 1; i < 20; i += 1)
    {

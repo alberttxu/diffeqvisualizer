@@ -70,7 +70,7 @@ void gameloop_oscillator()
    time_since_last_spawn += dt;
    while (time_since_last_spawn > spawn_period)
    {
-      Vec2F64 newcoords = { randfloat64(-boxlim, boxlim), randfloat64(-boxlim, boxlim) };
+      Vec2F64 newcoords = randomcoord();
       initTrajectory(&trajectories[newtrajidx]);
       addstate(currentstates, newtrajidx, newcoords);
       newtrajidx = (newtrajidx + 1) % numtrajectories;
