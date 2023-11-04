@@ -190,7 +190,7 @@ void gameloop_trajectories()
       }
       for (int i = 0; i < trajectory.size - 1; i += 1)
       {
-         DrawLineEx(points[i], points[i + 1], 2, MAROON);
+         DrawLineEx(points[i], points[i + 1], 3-0.1*i, DARKGRAY);
       }
    }
    }
