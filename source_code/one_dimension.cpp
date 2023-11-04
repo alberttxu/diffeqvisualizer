@@ -37,6 +37,12 @@ void gameloop_onedim()
    ImGui::Begin("1-D");
    ImGui::SliderFloat("A", &A, -5, 5);
    ImGui::SliderFloat("x", &x_pos, -10, 10);
+   if (ImGui::Button("reset"))
+   {
+      t = 0;
+      A = 0;
+      x_pos = 0;
+   }
    ImGui::End();
 
    x_pos = expf((f32)dt * A) * x_pos;
