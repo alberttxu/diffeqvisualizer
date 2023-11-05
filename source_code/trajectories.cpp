@@ -39,6 +39,7 @@ int newtrajidx = 0;
 f64 *AData;
 bool spawn_new_trajectories = true;
 bool show_eigenvectors = true;
+bool show_trajeigencomponents = false;
 
 constexpr f64 trajectory_lifetime_s = 5;
 f64 time_since_last_spawn = 0;
@@ -190,38 +191,66 @@ void gameloop_trajectories()
       }
       for (int i = 0; i < trajectory.size - 1; i += 1)
       {
-         DrawLineEx(points[i], points[i + 1], 3-0.1*i, DARKGRAY);
+         DrawLineEx(points[i], points[i + 1], 3-0.1f*i, DARKGRAY);
       }
    }
    }
 
    Eigen eigen = decomposition(A);
 
+   Vec2F64 v1rl = {eigen.vectors[0][0].rl, eigen.vectors[0][1].rl};
+   Vec2F64 v2rl = {eigen.vectors[1][0].rl, eigen.vectors[1][1].rl};
+
    // draw the real parts of the eigenvectors
    if (show_eigenvectors)
    {
-      float thickness = 3;
-      float lenscale = 1000;
+      f32 thickness = 3;
+      f64 lenscale = 1000;
       Color v1color = eigen.values[0].rl > 0 ? GREEN : BLUE;
       Color v2color = eigen.values[1].rl > 0 ? GREEN : BLUE;
       DrawLineEx(
-         coords2pixels((Vector2){
-            (f32) eigen.vectors[0][0].rl * lenscale,
-            (f32) eigen.vectors[0][1].rl * lenscale}),
-         coords2pixels((Vector2){
-            (f32) -eigen.vectors[0][0].rl * lenscale,
-            (f32) -eigen.vectors[0][1].rl * lenscale}),
+         coords2pixels(lenscale * v1rl),
+         coords2pixels(-lenscale * v1rl),
          thickness,
          v1color);
       DrawLineEx(
-         coords2pixels((Vector2){
-            (f32) eigen.vectors[1][0].rl * lenscale,
-            (f32) eigen.vectors[1][1].rl * lenscale}),
-         coords2pixels((Vector2){
-            (f32) -eigen.vectors[1][0].rl * lenscale,
-            (f32) -eigen.vectors[1][1].rl * lenscale}),
+         coords2pixels(lenscale * v2rl),
+         coords2pixels(-lenscale * v2rl),
          thickness,
          v2color);
+   }
+
+   bool eigvals_are_real = eigen.values[0].im == 0 && eigen.values[1].im == 0;
+   if (eigvals_are_real && show_trajeigencomponents)
+   {
+      constexpr int subset = 1;
+      for (int i = 0; i < subset; i++)
+      {
+         Mat2x2F64 V = { v1rl.elems[0], v1rl.elems[1], v2rl.elems[0], v2rl.elems[1] };
+         Vec2F64 x = currentstates[i];
+         LinsolveResult result = linsolve(V, x);
+         if (result.error_occurred)
+         {
+            continue;
+         }
+
+         Vec2F64 eigencoords = result.x;
+         Vec2F64 v1comp = eigencoords.elems[0] * v1rl;
+         Vec2F64 v2comp = eigencoords.elems[1] * v2rl;
+         Color v1color = eigen.values[0].rl > 0 ? GREEN : BLUE;
+         Color v2color = eigen.values[1].rl > 0 ? GREEN : BLUE;
+         f32 thickness = 2;
+         DrawLineEx(
+            coords2pixels(x),
+            coords2pixels(x - v1comp),
+            thickness,
+            v1color);
+         DrawLineEx(
+            coords2pixels(x),
+            coords2pixels(x - v2comp),
+            thickness,
+            v2color);
+      }
    }
 
    { ZoneScopedN("Post-iteration work");
@@ -255,6 +284,7 @@ void gameloop_trajectories()
    }
    ImGui::Checkbox("spawn new trajectories", &spawn_new_trajectories);
    ImGui::Checkbox("show eigenvectors", &show_eigenvectors);
+   ImGui::Checkbox("show trajectory eigen components", &show_trajeigencomponents);
 
    f32 maxval = 5;
    static f32 newAData[4] = {0, 0, 0, 0}; // row-major order because of ImGui
