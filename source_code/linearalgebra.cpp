@@ -46,6 +46,24 @@ Vec2F64 operator+(Vec2F64 a, Vec2F64 b)
    return {a.elems[0] + b.elems[0], a.elems[1] + b.elems[1]};
 }
 
+static inline
+Vec2F64 operator-(Vec2F64 a, Vec2F64 b)
+{
+   return {a.elems[0] - b.elems[0], a.elems[1] - b.elems[1]};
+}
+
+static inline
+Vec2F64 operator*(f64 a, Vec2F64 v)
+{
+   return {a * v.elems[0], a * v.elems[1]};
+}
+
+static inline
+f64 dot(Vec2F64 a, Vec2F64 b)
+{
+   return a.elems[0] * b.elems[0] + a.elems[1] * b.elems[1];
+}
+
 struct Mat2x2F64
 {
    f64 elems[4];
@@ -376,6 +394,15 @@ ComplexF64 operator/(ComplexF64 c, f64 a)
 }
 
 static inline
+ComplexF64 operator*(ComplexF64 a, ComplexF64 b)
+{
+   return {
+      a.rl * b.rl - a.im * b.im,
+      a.rl * b.im + a.im * b.rl
+   };
+}
+
+static inline
 f64 abs(ComplexF64 c)
 {
    return sqrt(c.rl * c.rl + c.im * c.im);
@@ -506,5 +533,56 @@ Eigen decomposition(Mat2x2F64 A)
    result.vectors[1][0] = v2.elems[0];
    result.vectors[1][1] = v2.elems[1];
    return result;
+}
+
+Vec2F64 linsolve_nonsingular(Mat2x2F64 A, Vec2F64 b)
+{
+   f64 a11 = A.elems[0];
+   f64 a21 = A.elems[1];
+   f64 a12 = A.elems[2];
+   f64 a22 = A.elems[3];
+   f64 b1 = b.elems[0];
+   f64 b2 = b.elems[1];
+
+   assert(a11 != 0);
+   f64 x2 = (b2 - a21/a11 * b1) / (a22 - a21/a11 * a12);
+   f64 x1 = (b1 - a12 * x2) / a11;
+   return {x1, x2};
+}
+
+struct LinsolveResult
+{
+   bool error_occurred;
+   Vec2F64 x;
+};
+
+LinsolveResult linsolve(Mat2x2F64 A, Vec2F64 b)
+{
+   f64 a11 = A.elems[0];
+   f64 a21 = A.elems[1];
+   f64 a12 = A.elems[2];
+   f64 a22 = A.elems[3];
+   f64 b1 = b.elems[0];
+   f64 b2 = b.elems[1];
+
+   f64 detA = a11 * a22 - a12 * a21;
+   if (detA == 0) // singular
+   {
+      return {true, {0,0}};
+   }
+
+   if (a11 == 0)
+   {
+      if (a22 == 0)
+      {
+         assert(0); // unreachable
+      }
+      Mat2x2F64 A_rowswap = {a21, a11, a22, a12};
+      Vec2F64 b_swap = {b2, b1};
+      Vec2F64 x = linsolve_nonsingular(A_rowswap, b_swap);
+      return {false, x};
+   }
+
+   return {false, linsolve_nonsingular(A, b)};
 }
 

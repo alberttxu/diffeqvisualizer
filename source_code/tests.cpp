@@ -284,6 +284,30 @@ void test_ourlinearalgebra()
    assert(isapprox(getUpperLeftBlock(ans), A));
    assert(isapprox(getUpperRightBlock(ans), B));
    }
+
+   puts("==== linear solve ====");
+   {
+   Mat2x2F64 A = { 0.09542656321310153, -0.8635607823993123, -1.6469693586011631, -0.8800629444940701 };
+   Vec2F64 b = { -1.3801508671515088, -0.971459816318056 };
+   Vec2F64 x_ans = { 0.25583242697775915, 0.8528173697229046 };
+   LinsolveResult result = linsolve(A, b);
+   assert(result.error_occurred == false);
+   assert(isapprox(result.x, x_ans));
+   }
+   {
+   Mat2x2F64 A = { 0, 1, 1, 1 };
+   Vec2F64 b = { 2, 3 };
+   Vec2F64 x_ans = { 1, 2 };
+   LinsolveResult result = linsolve(A, b);
+   assert(result.error_occurred == false);
+   assert(isapprox(result.x, x_ans));
+   }
+   {
+   Mat2x2F64 A = {0, 0, 0, 0};
+   Vec2F64 b = {0, 0};
+   LinsolveResult result = linsolve(A, b);
+   assert(result.error_occurred == true);
+   }
 }
 
 int main(void)
