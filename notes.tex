@@ -120,7 +120,7 @@ Here is a screenshot I've taken of the Trajectories demo below.
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.31]{screenshot_trajectories}
+\includegraphics[scale=0.45]{screenshot_trajectories}
 \caption{trajectory dynamics of $\dot{x} = Ax$, a.k.a phase space}
 \label{fig:Trajectories}
 \end{figure}
@@ -175,13 +175,17 @@ And this separates the dynamics into
 = A v_1 + A v_2
 = \lambda_1 v_1 + \lambda_2 v_2,
 \end{equation}
-which we can solve because the individual trajectories
+which we can solve because the individual DEs
 $$ \dot{v}_1 = A v_1 = \lambda_1 v_1, \quad \dot{v}_2 = A v_2 = \lambda_2 v_2 $$
 have solutions
 $$ v_1(t) = e^{t\lambda_1}v_{1,\mathrm{initial}}, \quad v_2(t) = e^{t\lambda_2}v_{2,\mathrm{initial}} .$$
+Thus, the final solution for $x$ is
+\begin{equation}
+x(t) = e^{t\lambda_1}v_{1,\mathrm{initial}} + e^{t\lambda_2}v_{2,\mathrm{initial}}
+\end{equation}
 
-Let's pause for a second and think about what this implies.
-It means that we can independently compute the trajectories for each eigenvector and add them to get the solution for $x$.
+In summary, we deconstruct $x_\mathrm{initial}$ into $v_{1,\mathrm{initial}}$ \& $v_{2,\mathrm{initial}}$,
+scale the individual eigenvectors, and then add the resulting terms to get the solution for $x$.
 Hopefully now it is clear what is happening in Figure \ref{fig:Trajectories}.
 The eigenvectors of $A$ lie on the blue and green lines.
 Those on the blue line have a negative eigenvalue, and those on the green line have a positive eigenvalue.
@@ -189,11 +193,12 @@ Each trajectory has components in the blue and green directions.
 So over time, the blue component of $x$ shrinks and the green component of $x$ grows.
 
 There is another way to compute the general solution.
-You might wonder if we can reuse the formula from the 1-D solution (equation \ref{eq:1Dsol}).
+You might wonder if we can reuse the formula from the 1-D solution (equation \ref{eq:1Dsol}),
 \begin{equation} \label{eq:2Dmatexpsol}
 x(t) = e^{tA} x_\mathrm{initial}
 \end{equation}
-Here $x(t)$ and $x_\mathrm{initial}$ are vectors, and $e^{tA}$ is a $2\times 2$ matrix --- this is called the matrix exponential function evaluated at $tA$.
+and indeed we can.
+Here $e^{tA}$ is a $2\times 2$ matrix --- this is called the matrix exponential function evaluated at $tA$.
 But how exactly is it defined?
 And how does this method compare to the one based on eigenvectors?
 Gilbert Strang has some good answers in this \href{https://youtu.be/LwSk9M5lJx4}{youtube video},
