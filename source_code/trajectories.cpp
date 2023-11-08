@@ -191,36 +191,56 @@ void gameloop_trajectories()
       }
       for (int i = 0; i < trajectory.size - 1; i += 1)
       {
-         DrawLineEx(points[i], points[i + 1], 3-0.1f*i, DARKGRAY);
+         DrawLineEx(points[i], points[i + 1], 3-0.1f*i, MAROON);
       }
    }
    }
 
    Eigen eigen = decomposition(A);
+   bool eigvals_are_real = eigen.values[0].im == 0 && eigen.values[1].im == 0;
 
    Vec2F64 v1rl = {eigen.vectors[0][0].rl, eigen.vectors[0][1].rl};
    Vec2F64 v2rl = {eigen.vectors[1][0].rl, eigen.vectors[1][1].rl};
 
-   // draw the real parts of the eigenvectors
    if (show_eigenvectors)
    {
       f32 thickness = 3;
       f64 lenscale = 1000;
-      Color v1color = eigen.values[0].rl > 0 ? GREEN : BLUE;
-      Color v2color = eigen.values[1].rl > 0 ? GREEN : BLUE;
-      DrawLineEx(
-         coords2pixels(lenscale * v1rl),
-         coords2pixels(-lenscale * v1rl),
-         thickness,
-         v1color);
-      DrawLineEx(
-         coords2pixels(lenscale * v2rl),
-         coords2pixels(-lenscale * v2rl),
-         thickness,
-         v2color);
+
+      if (eigvals_are_real)
+      {
+         Color v1color = eigen.values[0].rl > 0 ? GREEN : BLUE;
+         Color v2color = eigen.values[1].rl > 0 ? GREEN : BLUE;
+
+         DrawLineEx(
+            coords2pixels(lenscale * v1rl),
+            coords2pixels(-lenscale * v1rl),
+            thickness,
+            v1color);
+         DrawLineEx(
+            coords2pixels(lenscale * v2rl),
+            coords2pixels(-lenscale * v2rl),
+            thickness,
+            v2color);
+      }
+      else
+      {
+         Color v1color = eigen.values[0].rl > 0 ? LIME : SKYBLUE;
+
+         DrawLineEx(
+            coords2pixels(lenscale * v1rl),
+            coords2pixels(-lenscale * v1rl),
+            thickness,
+            v1color);
+         Vec2F64 v1im = {eigen.vectors[0][0].im, eigen.vectors[0][1].im};
+         DrawLineEx(
+            coords2pixels(lenscale * v1im),
+            coords2pixels(-lenscale * v1im),
+            thickness,
+            v1color);
+      }
    }
 
-   bool eigvals_are_real = eigen.values[0].im == 0 && eigen.values[1].im == 0;
    if (eigvals_are_real && show_trajeigencomponents)
    {
       constexpr int subset = 1;
