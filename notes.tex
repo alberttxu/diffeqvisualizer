@@ -18,15 +18,14 @@
 \graphicspath{ {./assets/} }
 
 \title{Linear differential equations}
-\author{Albert Xu}
+\author{Albert Xu \\ albert.t.xu@gmail.com}
 
 \begin{document}
 \maketitle
 
-I'm developing an application to \href{https://github.com/alberttxu/diffeqvisualizer}{visualize differential equations}.
-The purpose of this app is to help students understand what a differential equation means,
-since many college courses don't provide much intuition.
-This document covers the mathematics used in the app's demo examples.
+I am developing an \href{https://github.com/alberttxu/diffeqvisualizer}{interactive app} to aid in understanding both the theory and applications of differential equations.
+The purpose of this document is to introduce the relevant mathematical concepts in a nutshell manner.
+
 
 \section{Intro}
 
@@ -78,14 +77,16 @@ However, for a specific particle, its solution is
   x(t) = x_\mathrm{initial} e^{tA}
 \end{equation}
 since $x_\mathrm{initial} = x(0)$ uniquely determines $c$.
+
+Real-world examples:
 \begin{itemize}
-  \item Fun fact: this is the same formula used in
-  \href{https://en.wikipedia.org/wiki/Compound_interest#Continuous_compounding}{compound interest}.
+  \item \href{https://en.wikipedia.org/wiki/Compound_interest#Continuous_compounding}{Compound interest} --- $A$ represents an interest rate.
+  \item \href{https://en.wikipedia.org/wiki/RC_circuit#Natural_response}{RC circuit} --- $A$ is called the reciprocal of the RC time constant.
 \end{itemize}
 
 \section{2-D}
 
-This is much more interesting since there are numerous ways a 2-D point can move relative to the origin.
+The trajectories here are much more interesting since there are numerous ways a 2-D point can move relative to the origin.
 I believe it is very hard to understand the dynamics in this case without a graphical application.
 And so I encourage the reader to play around with the elements of $A$ to see how it affects the motion of trajectories.
 In the rest of this section I won't go into troublesome formulas and derivations like in most college courses,
@@ -120,7 +121,7 @@ Here is a screenshot I've taken of the Trajectories demo below.
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.45]{screenshot_trajectories}
+\includegraphics[scale=0.43]{screenshot_trajectories}
 \caption{trajectory dynamics of $\dot{x} = Ax$, a.k.a phase space}
 \label{fig:Trajectories}
 \end{figure}
@@ -217,7 +218,7 @@ See also:
 \end{itemize}
 
 \subsection*{Rotation \& Oscillation --- imaginary eigenvalues}
-This section uses imaginary numbers to explain how rotating trajectories arise.
+This subsection uses imaginary numbers to explain how rotating trajectories arise.
 There are no new mathematical concepts introduced here,
 so feel free to skip ahead if you're not familiar with imaginary numbers.
 
@@ -250,7 +251,7 @@ x(t) & = 0.5 e^{\lambda_1 t}v_1 + 0.5 e^{\lambda_2 t}v_2 \\
      & = \Re(e^{i\omega t}v_1) \\
      & = \Re((\cos \omega t + i \sin \omega t) v_1) \\
      & = \cos \omega t \Re(v_1) - \sin \omega t \Im(v_1) \\
-     & = \cos \omega t \, v_\mathrm{rl} - \sin \omega t \, v_\mathrm{im} && \text{for convenience only}
+     & = \cos \omega t \, v_\mathrm{rl} - \sin \omega t \, v_\mathrm{im} && \text{notational convenience}
 \end{aligned}
 \end{equation}
 where $\Re(z)$ is the real part of $z$, and $\Im(z)$ returns the imaginary part of $z$ as a real number.
@@ -263,7 +264,7 @@ the trajectory $x$ rotates between the vectors
 $$ v_\mathrm{rl}, -v_\mathrm{im}, -v_\mathrm{rl}, v_\mathrm{im}, v_\mathrm{rl}, -v_\mathrm{im}, \dots $$
 periodically forever.
 
-For complex eigenvalues (containing both real and imaginary parts), the trajectories will additionally grow or shrink.
+For complex eigenvalues (containing both real and imaginary parts), the trajectories will also grow and shrink.
 The analysis uses the same reasoning we already covered so I won't repeat it.
 
 
@@ -300,7 +301,7 @@ The friction force is
   -k_\mathrm{friction} \dot{x}
 \end{equation}
 where $k_\mathrm{friction}$ is called the viscous damping coefficient, and $\dot{x}$ is the box's velocity.
-The term viscous is used in fluid dynamics, but its the same idea here.
+The term viscous is used in fluid dynamics, but it conveys a similar idea.
 Friction always acts against the direction of velocity because it is a drag force.
 With these 2 forces, equation \ref*{eq:newton2ndlaw} becomes
 \begin{equation} \label{eq:boxeq}
@@ -310,7 +311,7 @@ With these 2 forces, equation \ref*{eq:newton2ndlaw} becomes
 \end{equation}
 We have not seen this form before.
 The $\ddot{x}$ (2nd derivative) term makes this a 2nd-order equation whereas $\dot{x} = Ax$ is a 1st-order equation, so it looks like we are stuck.
-The question is whether it is possible to convert equation \ref*{eq:boxeq} into the form $\dot{x} = Ax$.
+The question is whether it is possible to convert between the two forms.
 At this point, some lecturers will pull a ``trick'', and arrive at a new set of equations without explaining why it works.
 I'll explain the general method and then apply it to our box-spring system.
 
@@ -329,8 +330,6 @@ We want to convert a general $n$-th order linear DE of the form
 to the familiar form $\dot{x} = Ax$.
 The notation $x^{(i)}$ represents the $i$th derivative of $x(t)$ and is equivalent to the dot notation.
 The key ``trick'' here is called a \textbf{change of variables}.
-We will declare a new vector variable which contains all of the higher derivatives,
-and this new variable will satisfy $\dot{x} = Ax$.
 Allow me to explain.
 
 Let's declare a variable, $z$, and set it equal to
@@ -382,10 +381,10 @@ which in terms of $z$ is
 which is the form $\dot{z} = Az$.
 In the first $n-1$ rows of $A$ there is a $1$ located after the diagonal position.
 This is a consequence of how we defined $z$ --- the $i$th element of $\dot{z}$ equals the $i+1$th element of $z$.
-In the $n$th (last) row the coefficients are the result of isolating $x^{(n)}$ from equation \ref{eq:nthOrderDE} to the left-hand side.
+The last row is the result of isolating $x^{(n)}$ from (\ref*{eq:nthOrderDE}) to the left-hand side.
 A matrix with this type of pattern is called a companion matrix.
 
-Applying this method to our box-spring system (eq. \ref{eq:boxeq}), we get
+Applying this method to our box-spring system (\ref*{eq:boxeq}), we get
 \begin{align} \label{eq:boxeqCompanion}
 \begin{bmatrix}
         \dot{x} \\
